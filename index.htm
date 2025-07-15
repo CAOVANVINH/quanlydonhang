@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giao diện Đặt hàng</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải font Inter từ Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tải thư viện SheetJS để xuất Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #2563eb; }
+        .modal-overlay, .toast { transition: opacity 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Màn hình lựa chọn Ngày (ẩn ban đầu) -->
+    <div id="dateSelectionOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 text-center max-w-md w-full relative">
+             <button id="backToKitchenSelect" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Chọn Ngày Làm Việc</h1>
+            <h2 id="monthYearDisplay" class="text-xl font-medium text-gray-500 mb-6"></h2>
+            <div class="space-y-4">
+                <input type="number" id="dayInput" min="1" max="31" class="w-full text-4xl font-bold p-3 border-b-2 border-gray-300 rounded-lg text-center focus:border-blue-500 focus:outline-none">
+                <button id="confirmDateBtn" class="w-full bg-green-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-green-700 transition-transform transform hover:scale-105">
+                    Vào ứng dụng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình lựa chọn Bếp (ẩn ban đầu) -->
+    <div id="kitchenSelectionOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 text-center max-w-md w-full relative">
+            <button id="backToDeviceSelect" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">Chọn Bếp</h1>
+            <p class="text-gray-600 mb-8">Vui lòng chọn bếp bạn muốn làm việc.</p>
+            <div class="space-y-4">
+                <button data-kitchen="bep_chi_mai" class="kitchen-btn w-full bg-teal-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-teal-700 transition-transform transform hover:scale-105">
+                    Bếp (Chị Mai)
+                </button>
+                <button data-kitchen="teste_viet_nam" class="kitchen-btn w-full bg-orange-500 text-white font-bold py-4 px-6 rounded-lg hover:bg-orange-600 transition-transform transform hover:scale-105">
+                    TESTE VIET NAM
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình lựa chọn thiết bị -->
+    <div id="deviceSelectionOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 text-center max-w-md w-full">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">Chọn thiết bị của bạn</h1>
+            <p class="text-gray-600 mb-8">Để có trải nghiệm tốt nhất, hãy cho chúng tôi biết bạn đang sử dụng thiết bị nào.</p>
+            <div class="space-y-4">
+                <button id="selectDesktop" class="w-full bg-blue-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105 flex items-center justify-center space-x-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    <span>Sử dụng trên Máy tính</span>
+                </button>
+                <button id="selectMobile" class="w-full bg-gray-700 text-white font-bold py-4 px-6 rounded-lg hover:bg-gray-800 transition-transform transform hover:scale-105 flex items-center justify-center space-x-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    <span>Dùng trên Điện thoại</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container chính (ẩn ban đầu) -->
+    <div id="mainApp" class="w-full h-screen flex-col hidden">
+        
+        <!-- Header -->
+        <header class="bg-white z-10 shadow-sm flex-shrink-0">
+            <div class="px-6 py-3 flex items-center justify-between">
+                <button id="backToDateSelect" class="text-gray-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg></button>
+                <h1 id="kitchenTitle" class="text-xl font-bold text-blue-900">Đặt hàng</h1>
+                <button id="exportOrderBtn" class="text-blue-800 p-2 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                </button>
+            </div>
+            <div class="px-6 pb-4 border-b">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Tìm sản phẩm..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
+                </div>
+            </div>
+            <div class="bg-white px-6 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <button id="filterPopularBtn" class="px-4 py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-600">Lọc hàng bán chạy</button>
+                    <button id="showAllBtn" class="px-4 py-2 bg-gray-500 text-white rounded-md text-sm font-medium hover:bg-gray-600 hidden">Hiển thị tất cả</button>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-700 mr-3">Chế độ Admin</span>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="adminModeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="adminModeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="w-full p-4 md:p-6 bg-gray-50 overflow-y-auto flex-grow">
+            <div id="adminPanel" class="bg-white p-4 rounded-xl shadow-md mb-6 hidden">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">Bảng điều khiển Admin</h2>
+                <form id="addProductForm" class="mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label for="productName" class="block text-sm font-medium text-gray-700">Tên sản phẩm</label>
+                            <input type="text" id="productName" placeholder="VD: Dầu gội" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="productUnit" class="block text-sm font-medium text-gray-700">Đơn vị</label>
+                            <input type="text" id="productUnit" placeholder="VD: chai" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        </div>
+                        <button type="submit" class="w-full justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Thêm sản phẩm</button>
+                    </div>
+                </form>
+                <div class="border-t pt-4 mt-4 flex items-center space-x-4">
+                     <h3 class="text-lg font-medium text-gray-700">DS Sản phẩm:</h3>
+                     <button id="saveMasterListBtn" class="px-4 py-2 bg-cyan-600 text-white rounded-md text-sm font-medium hover:bg-cyan-700">Lưu DS Gốc</button>
+                     <button id="backupBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Xuất File</button>
+                     <button id="restoreBtn" class="px-4 py-2 bg-yellow-500 text-white rounded-md text-sm font-medium hover:bg-yellow-600">Nhập File</button>
+                     <input type="file" id="fileInput" class="hidden" accept=".json">
+                     <button id="deleteAllBtn" class="ml-auto px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-800">Xoá Toàn Bộ</button>
+                </div>
+            </div>
+            <div id="productGrid"></div>
+        </main>
+    </div>
+
+    <!-- Modals và Toasts -->
+    <div id="loginModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h2 class="text-2xl font-bold mb-4 text-center">Đăng nhập Admin</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700">Tên đăng nhập</label>
+                    <input type="text" id="username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                    <input type="password" id="password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <p id="loginError" class="text-red-500 text-sm mb-4 text-center hidden">Tên đăng nhập hoặc mật khẩu không đúng.</p>
+                <div class="flex items-center justify-between">
+                    <button type="button" id="closeLoginModal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Đăng nhập</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="confirmDeleteModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h2 class="text-xl font-bold mb-2 text-center">Xác nhận Xóa</h2>
+            <p class="text-gray-600 mb-6 text-center">Bạn có chắc chắn muốn xóa sản phẩm này khỏi danh sách gốc?</p>
+            <div class="flex items-center justify-center space-x-4">
+                <button type="button" id="cancelDeleteBtn" class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Hủy</button>
+                <button type="button" id="confirmDeleteBtn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Xóa</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirmDeleteAllModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h2 class="text-xl font-bold mb-2 text-center text-red-600">CẢNH BÁO</h2>
+            <p class="text-gray-600 mb-6 text-center">Hành động này sẽ xóa VĨNH VIỄN toàn bộ danh sách sản phẩm gốc của bếp này. Bạn có chắc chắn muốn tiếp tục?</p>
+            <div class="flex items-center justify-center space-x-4">
+                <button type="button" id="cancelDeleteAllBtn" class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Hủy</button>
+                <button type="button" id="confirmDeleteAllBtn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Xóa Toàn Bộ</button>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="toast fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0"></div>
+
+    <script>
+        // --- DỮ LIỆU VÀ BIẾN TOÀN CỤC ---
+        const kitchenSelectionOverlay = document.getElementById('kitchenSelectionOverlay');
+        const deviceSelectionOverlay = document.getElementById('deviceSelectionOverlay');
+        const dateSelectionOverlay = document.getElementById('dateSelectionOverlay');
+        const mainApp = document.getElementById('mainApp');
+        const productGrid = document.getElementById('productGrid');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminModeToggle = document.getElementById('adminModeToggle');
+        const searchInput = document.getElementById('searchInput');
+        const filterPopularBtn = document.getElementById('filterPopularBtn');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const backupBtn = document.getElementById('backupBtn');
+        const restoreBtn = document.getElementById('restoreBtn');
+        const fileInput = document.getElementById('fileInput');
+        const toast = document.getElementById('toast');
+        const kitchenTitle = document.getElementById('kitchenTitle');
+        const exportOrderBtn = document.getElementById('exportOrderBtn');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        const saveMasterListBtn = document.getElementById('saveMasterListBtn');
+        
+        let selectedKitchenId = '';
+        let selectedKitchenName = '';
+        let deviceType = '';
+        let selectedDate = '';
+        let currentYear, currentMonth;
+        let isAdminMode = false;
+        let isBestSellerModeActive = false;
+        let productToDeleteId = null;
+        
+        let products = [];
+        let masterProductList = [];
+        
+        // --- CÁC HÀM XỬ LÝ CHÍNH ---
+        function selectDevice(selectedDevice) {
+            deviceType = selectedDevice;
+            deviceSelectionOverlay.classList.add('hidden');
+            kitchenSelectionOverlay.classList.remove('hidden');
+        }
+        
+        function selectKitchen(kitchenId, kitchenName) {
+            selectedKitchenId = kitchenId;
+            selectedKitchenName = kitchenName;
+            kitchenTitle.textContent = kitchenName;
+            
+            const lastDateStr = localStorage.getItem(`lastDate_${selectedKitchenId}`);
+            const dateToUse = lastDateStr ? new Date(lastDateStr) : new Date();
+
+            currentYear = dateToUse.getFullYear();
+            currentMonth = dateToUse.getMonth() + 1;
+            const currentDay = dateToUse.getDate();
+
+            document.getElementById('monthYearDisplay').textContent = `Tháng ${currentMonth}, ${currentYear}`;
+            document.getElementById('dayInput').value = currentDay;
+
+            kitchenSelectionOverlay.classList.add('hidden');
+            dateSelectionOverlay.classList.remove('hidden');
+        }
+
+        function startApp() {
+            const day = parseInt(document.getElementById('dayInput').value, 10);
+            
+            if (isNaN(day) || day < 1 || day > 31) {
+                showToast('Ngày không hợp lệ!', true);
+                return;
+            }
+
+            const dayString = String(day).padStart(2, '0');
+            const monthString = String(currentMonth).padStart(2, '0');
+            selectedDate = `${currentYear}-${monthString}-${dayString}`;
+            
+            const testDate = new Date(selectedDate);
+            if (testDate.getDate() !== day) {
+                showToast(`Tháng ${currentMonth} không có ngày ${day}!`, true);
+                return;
+            }
+            
+            localStorage.setItem(`lastDate_${selectedKitchenId}`, selectedDate);
+            loadDailyData();
+            dateSelectionOverlay.classList.add('hidden');
+            mainApp.classList.add('flex');
+            mainApp.classList.remove('hidden');
+            renderUI();
+        }
+
+        function renderUI() {
+            adminPanel.classList.toggle('hidden', !isAdminMode);
+            
+            productGrid.className = 'grid';
+            if (deviceType === 'mobile') {
+                productGrid.classList.add('grid-cols-1', 'gap-4');
+            } else {
+                productGrid.classList.add('grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5', 'gap-6');
+            }
+
+            let productsToRender = [...products];
+            if (isBestSellerModeActive) {
+                const bestSellers = getBestSellingProducts();
+                productsToRender = bestSellers.map(bestSeller => {
+                    const productInfo = masterProductList.find(p => p.id === bestSeller.id);
+                    const currentProduct = products.find(p => p.id === bestSeller.id);
+                    return { ...productInfo, quantity: currentProduct ? currentProduct.quantity : 0 };
+                });
+            }
+
+            const searchTerm = searchInput.value.toLowerCase();
+            if (searchTerm) {
+                productsToRender = productsToRender.filter(p => p.name.toLowerCase().includes(searchTerm));
+            }
+
+            productGrid.innerHTML = '';
+            productsToRender.forEach(product => {
+                const deleteButtonHTML = isAdminMode ? `<button onclick="promptDelete('${product.id}')" class="absolute top-2 right-2 bg-red-100 text-red-600 rounded-full p-1 w-7 h-7 flex items-center justify-center hover:bg-red-500 hover:text-white z-10"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>` : '';
+                const quantityControlsHTML = !isAdminMode ? `<div class="flex items-center justify-center space-x-2 mt-auto"><button onclick="updateQuantity('${product.id}', -1)" class="w-10 h-10 flex items-center justify-center text-2xl font-bold bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">-</button><input id="quantity-${product.id}" type="number" step="0.1" min="0" value="${product.quantity}" oninput="manualUpdateQuantity('${product.id}', this.value)" class="w-20 h-10 text-center text-lg font-semibold border-gray-300 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"><button onclick="updateQuantity('${product.id}', 1)" class="w-10 h-10 flex items-center justify-center text-2xl font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700">+</button></div>` : '';
+                const productCardHTML = `<div id="${product.id}" class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col p-4 relative transition-all duration-300 hover:shadow-lg">${deleteButtonHTML}<div class="flex-grow"><h3 class="text-lg font-bold text-gray-800 mb-4">${product.name}</h3><p class="text-sm text-gray-500 mb-4">Đơn vị: ${product.unit}</p></div>${quantityControlsHTML}</div>`;
+                productGrid.innerHTML += productCardHTML;
+            });
+        }
+        
+        // --- HÀM PHỤ ---
+        function updateQuantity(productId, change) { const product = products.find(p => p.id === productId); if (product) { let newValue = product.quantity + change; if (newValue >= 0) { product.quantity = parseFloat(newValue.toFixed(2)); const input = document.getElementById(`quantity-${productId}`); if (input) input.value = product.quantity; saveDailyData(); } } }
+        function manualUpdateQuantity(productId, value) { const product = products.find(p => p.id === productId); if (product) { let newValue = parseFloat(value); if (isNaN(newValue) || newValue < 0) { product.quantity = 0; } else { product.quantity = parseFloat(newValue.toFixed(2)); } saveDailyData(); } }
+        
+        function promptDelete(productId) { productToDeleteId = productId; document.getElementById('confirmDeleteModal').classList.remove('hidden'); }
+        function showLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function hideLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginForm').reset(); document.getElementById('loginError').classList.add('hidden'); }
+        
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.className = `toast fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => { toast.classList.add('opacity-0'); }, 3000);
+        }
+
+        // --- HÀM DỮ LIỆU ---
+        function getMasterListKey() { return `masterProductList_${selectedKitchenId}`; }
+        function getDailyDataKey() { return `dailyData_${selectedKitchenId}_${selectedDate}`; }
+
+        function saveMasterList() {
+            localStorage.setItem(getMasterListKey(), JSON.stringify(masterProductList));
+            showToast('Đã lưu danh sách sản phẩm gốc!');
+        }
+
+        function loadMasterList() {
+            const backup = localStorage.getItem(getMasterListKey());
+            masterProductList = backup ? JSON.parse(backup) : [];
+        }
+
+        function saveDailyData() {
+            localStorage.setItem(getDailyDataKey(), JSON.stringify(products));
+        }
+
+        function loadDailyData() {
+            loadMasterList();
+            const dailyData = localStorage.getItem(getDailyDataKey());
+            if (dailyData) {
+                products = JSON.parse(dailyData);
+                showToast(`Đã tải dữ liệu của ngày ${selectedDate}`);
+            } else {
+                products = masterProductList.map(p => ({ ...p, quantity: 0 }));
+                showToast(`Bắt đầu ngày mới. Số lượng đã được reset về 0.`);
+            }
+        }
+
+        function getBestSellingProducts() {
+            const aggregatedQuantities = {};
+            const prefix = `dailyData_${selectedKitchenId}_`;
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(prefix)) {
+                    const dailyProducts = JSON.parse(localStorage.getItem(key));
+                    for (const product of dailyProducts) {
+                        if (product.quantity > 0) {
+                            if (aggregatedQuantities[product.id]) {
+                                aggregatedQuantities[product.id] += product.quantity;
+                            } else {
+                                aggregatedQuantities[product.id] = product.quantity;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            const sortedProducts = Object.entries(aggregatedQuantities)
+                .map(([id, totalQuantity]) => ({ id, totalQuantity }))
+                .sort((a, b) => b.totalQuantity - a.totalQuantity);
+
+            return sortedProducts;
+        }
+
+        function backupToFile() {
+            const dataStr = JSON.stringify(masterProductList, null, 2);
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `master_list_${selectedKitchenId}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Đã xuất file Danh sách Sản phẩm!');
+        }
+        
+        function restoreFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedProducts = JSON.parse(e.target.result);
+                    if (Array.isArray(importedProducts) && importedProducts.every(p => 'id' in p && 'name' in p)) {
+                        masterProductList = importedProducts;
+                        saveMasterList();
+                        products = masterProductList.map(p => ({ ...p, quantity: 0 }));
+                        renderUI();
+                        saveDailyData();
+                        showToast('Đã nhập và làm mới danh sách sản phẩm!');
+                    } else { throw new Error("Invalid file format"); }
+                } catch (error) { showToast('File không hợp lệ hoặc bị lỗi!', true); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function exportToExcel() {
+            const productsToExport = products.filter(p => p.quantity > 0);
+            if (productsToExport.length === 0) {
+                showToast("Không có sản phẩm nào để xuất file.", true);
+                return;
+            }
+
+            const header = [
+                ["Đơn hàng cho Bếp: " + selectedKitchenName],
+                ["Ngày: " + selectedDate],
+                []
+            ];
+            
+            const tableHeader = ["STT", "Tên sản phẩm", "Số lượng", "Đơn vị"];
+            const tableData = productsToExport.map((p, index) => [
+                index + 1,
+                p.name,
+                p.quantity,
+                p.unit
+            ]);
+
+            const finalData = [...header, tableHeader, ...tableData];
+            
+            const worksheet = XLSX.utils.aoa_to_sheet(finalData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Đơn hàng");
+
+            const colWidths = [
+                { wch: 5 },
+                { wch: 40 },
+                { wch: 10 },
+                { wch: 15 }
+            ];
+            worksheet['!cols'] = colWidths;
+
+            XLSX.writeFile(workbook, `DonHang_${selectedKitchenId}_${selectedDate}.xlsx`);
+        }
+
+        // --- BẮT SỰ KIỆN ---
+        function initEventListeners() {
+            document.querySelectorAll('.kitchen-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    selectKitchen(button.dataset.kitchen, button.textContent.trim());
+                });
+            });
+
+            document.getElementById('selectDesktop').addEventListener('click', () => selectDevice('desktop'));
+            document.getElementById('selectMobile').addEventListener('click', () => selectDevice('mobile'));
+            document.getElementById('confirmDateBtn').addEventListener('click', startApp);
+
+            // Nút quay lại
+            document.getElementById('backToDeviceSelect').addEventListener('click', () => { kitchenSelectionOverlay.classList.add('hidden'); deviceSelectionOverlay.classList.remove('hidden'); });
+            document.getElementById('backToKitchenSelect').addEventListener('click', () => { dateSelectionOverlay.classList.add('hidden'); kitchenSelectionOverlay.classList.remove('hidden'); });
+            document.getElementById('backToDateSelect').addEventListener('click', () => { mainApp.classList.add('hidden'); mainApp.classList.remove('flex'); dateSelectionOverlay.classList.remove('hidden'); });
+
+            filterPopularBtn.addEventListener('click', () => { isBestSellerModeActive = true; filterPopularBtn.classList.add('hidden'); showAllBtn.classList.remove('hidden'); renderUI(); });
+            showAllBtn.addEventListener('click', () => { isBestSellerModeActive = false; showAllBtn.classList.add('hidden'); filterPopularBtn.classList.remove('hidden'); renderUI(); });
+            
+            saveMasterListBtn.addEventListener('click', saveMasterList);
+            backupBtn.addEventListener('click', backupToFile);
+            restoreBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', restoreFromFile);
+            exportOrderBtn.addEventListener('click', exportToExcel);
+
+            adminModeToggle.addEventListener('change', function() { if (this.checked) { showLoginModal(); } else { isAdminMode = false; renderUI(); } });
+            
+            document.getElementById('loginForm').addEventListener('submit', function(event) { event.preventDefault(); const username = document.getElementById('username').value; const password = document.getElementById('password').value; if (username === 'caovanvinh' && password === 'Aloha2023@') { isAdminMode = true; adminModeToggle.checked = true; hideLoginModal(); renderUI(); } else { document.getElementById('loginError').classList.remove('hidden'); isAdminMode = false; adminModeToggle.checked = false; } });
+            document.getElementById('closeLoginModal').addEventListener('click', () => { adminModeToggle.checked = false; hideLoginModal(); });
+            
+            document.getElementById('confirmDeleteModal').querySelector('#cancelDeleteBtn').addEventListener('click', () => { productToDeleteId = null; document.getElementById('confirmDeleteModal').classList.add('hidden'); });
+            document.getElementById('confirmDeleteModal').querySelector('#confirmDeleteBtn').addEventListener('click', () => { if (productToDeleteId) { masterProductList = masterProductList.filter(p => p.id !== productToDeleteId); saveMasterList(); products = products.filter(p => p.id !== productToDeleteId); productToDeleteId = null; document.getElementById('confirmDeleteModal').classList.add('hidden'); renderUI(); saveDailyData(); } });
+            
+            deleteAllBtn.addEventListener('click', () => { document.getElementById('confirmDeleteAllModal').classList.remove('hidden'); });
+            document.getElementById('confirmDeleteAllModal').querySelector('#cancelDeleteAllBtn').addEventListener('click', () => { document.getElementById('confirmDeleteAllModal').classList.add('hidden'); });
+            document.getElementById('confirmDeleteAllModal').querySelector('#confirmDeleteAllBtn').addEventListener('click', () => { masterProductList = []; products = []; saveMasterList(); saveDailyData(); renderUI(); document.getElementById('confirmDeleteAllModal').classList.add('hidden'); showToast('Đã xóa toàn bộ sản phẩm.'); });
+            
+            searchInput.addEventListener('input', renderUI);
+            document.getElementById('addProductForm').addEventListener('submit', function(event) { event.preventDefault(); const productNameInput = document.getElementById('productName'); const productUnitInput = document.getElementById('productUnit'); const newProduct = { id: 'prod_' + Date.now(), name: productNameInput.value.trim(), unit: productUnitInput.value.trim(), quantity: 0, popularity: 0 }; masterProductList.unshift(newProduct); saveMasterList(); products.unshift({...newProduct}); renderUI(); this.reset(); productNameInput.focus(); saveDailyData(); });
+        }
+
+        // Khởi chạy các sự kiện khi DOM đã sẵn sàng
+        document.addEventListener('DOMContentLoaded', initEventListeners);
+        
+    </script>
+    
+    <!-- HTML cho modals (đầy đủ) -->
+    <div id="loginModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"> <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm"> <h2 class="text-2xl font-bold mb-4 text-center">Đăng nhập Admin</h2> <form id="loginForm"> <div class="mb-4"> <label for="username" class="block text-sm font-medium text-gray-700">Tên đăng nhập</label> <input type="text" id="username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required> </div> <div class="mb-4"> <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu</label> <input type="password" id="password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required> </div> <p id="loginError" class="text-red-500 text-sm mb-4 text-center hidden">Tên đăng nhập hoặc mật khẩu không đúng.</p> <div class="flex items-center justify-between"> <button type="button" id="closeLoginModal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Hủy</button> <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Đăng nhập</button> </div> </form> </div> </div>
+    <div id="confirmDeleteModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"> <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm"> <h2 class="text-xl font-bold mb-2 text-center">Xác nhận Xóa</h2> <p class="text-gray-600 mb-6 text-center">Bạn có chắc chắn muốn xóa sản phẩm này?</p> <div class="flex items-center justify-center space-x-4"> <button type="button" id="cancelDeleteBtn" class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Hủy</button> <button type="button" id="confirmDeleteBtn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Xóa</button> </div> </div> </div>
+    <div id="confirmDeleteAllModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"> <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm"> <h2 class="text-xl font-bold mb-2 text-center text-red-600">CẢNH BÁO</h2> <p class="text-gray-600 mb-6 text-center">Hành động này sẽ xóa VĨNH VIỄN toàn bộ danh sách sản phẩm gốc của bếp này. Bạn có chắc chắn muốn tiếp tục?</p> <div class="flex items-center justify-center space-x-4"> <button type="button" id="cancelDeleteAllBtn" class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Hủy</button> <button type="button" id="confirmDeleteAllBtn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Xóa Toàn Bộ</button> </div> </div> </div>
+
+</body>
+</html>
