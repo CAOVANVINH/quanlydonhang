@@ -3,622 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Ty Thiết Kế In Ấn Hội An </title>
-    <!-- Tích hợp Tailwind CSS -->
+    <title>Trợ Lý Ảo Cửa Trần Hằng</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Vietnamese IME Library -->
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-telex@1/vanilla-telex.min.js"></script>
     <style>
-        /* Font tùy chỉnh */
-        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
-
         body {
-            font-family: 'Be Vietnam Pro', sans-serif;
-        }
-        
-        .font-headline {
             font-family: 'Inter', sans-serif;
         }
-
-        /* --- START: GIAO DIỆN LIQUID GLASS VỚI HÌNH NỀN --- */
-        
-        body {
-            background-color: #2c3e50; /* Màu nền dự phòng */
-            position: relative;
-            overflow-x: hidden;
+        #image-input { display: none; }
+        .chat-container::-webkit-scrollbar { width: 8px; }
+        .chat-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar-thumb:hover { background: #555; }
+        .drag-over {
+            background-color: #e0f2fe !important; /* light-blue */
+            border: 2px dashed #3b82f6; /* blue-500 */
         }
-
-        /* Lớp chứa hình nền */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://cdn.3axis.co/user-images/qommmgko.png');
-            background-repeat: repeat; /* Lặp lại hoa văn */
-            opacity: 0.08; /* Làm cho hoa văn rất mờ */
-            z-index: -2;
-        }
-
-        /* Lớp phủ màu gradient để giữ hiệu ứng chiều sâu */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.4));
-            z-index: -1;
-        }
-
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            -webkit-backdrop-filter: blur(15px);
-            backdrop-filter: blur(15px);
-            border-radius: 1.25rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-        }
-
-        .task-item-glass {
-            background: rgba(255, 255, 255, 0.05);
-            -webkit-backdrop-filter: blur(5px);
-            backdrop-filter: blur(5px);
-            border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            transition: all 0.3s ease;
-        }
-        .task-item-glass:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .input-glass {
-            background: rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            color: #fff !important;
-        }
-        .input-glass::placeholder {
-            color: rgba(255, 255, 255, 0.5) !important;
-        }
-
-        /* --- END: GIAO DIỆN LIQUID GLASS --- */
-
-        .animated-gradient-text {
-            background: linear-gradient(to right, #fde047, #f97316, #ec4899, #8b5cf6);
-            background-size: 250% auto;
-            color: #000;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: gradient-animation 5s linear infinite;
-        }
-
-        @keyframes gradient-animation {
-            to { background-position: 250% center; }
-        }
-        
-        .completed .task-content,
-        .completed .customer-info {
-            text-decoration: line-through;
-            opacity: 0.6;
-        }
-        
-        .hidden { display: none !important; }
-        
-        .modal-enter-active, .modal-leave-active { transition: opacity 200ms, transform 200ms; }
-        .modal-enter-from { opacity: 0; transform: scale(0.95); }
-        .modal-enter-to { opacity: 1; transform: scale(1); }
-        .modal-leave-from { opacity: 1; transform: scale(1); }
-        .modal-leave-to { opacity: 0; transform: scale(0.95); }
-        
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7); display: flex;
-            justify-content: center; align-items: center; z-index: 100;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
-            border-top: 4px solid #fff; width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .dark .drag-over {
+            background-color: #1e3a8a !important; /* dark-blue */
         }
     </style>
 </head>
-<body class="text-gray-100">
-    
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-    </div>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
-    <!-- Modal Thêm Công Việc -->
-    <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div id="modalContent" class="glass-effect w-full max-w-2xl relative">
-            <button id="closeModalBtn" class="absolute top-4 right-5 text-white hover:text-gray-300 text-3xl" aria-label="Đóng">&times;</button>
-            <div class="p-6 sm:p-8">
-                <h3 class="text-2xl font-bold mb-6 text-center text-white">Thêm Công Việc Mới</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                     <div>
-                        <label for="customerNameInput" class="block text-sm font-medium text-gray-200 mb-1">Tên khách hàng <span class="text-red-400">*</span></label>
-                        <input type="text" id="customerNameInput" class="input-glass w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="Nguyễn Văn A">
-                    </div>
-                    <div>
-                        <label for="phoneInput" class="block text-sm font-medium text-gray-200 mb-1">Số điện thoại</label>
-                        <input type="tel" id="phoneInput" class="input-glass w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="(Không bắt buộc)">
-                    </div>
-                     <div>
-                        <label for="addressInput" class="block text-sm font-medium text-gray-200 mb-1">Địa chỉ</label>
-                        <input type="text" id="addressInput" class="input-glass w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="(Không bắt buộc)">
-                    </div>
-                    <div>
-                        <label for="timeInput" class="block text-sm font-medium text-gray-200 mb-1">Thời gian <span class="text-red-400">*</span></label>
-                        <input type="datetime-local" id="timeInput" class="input-glass w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" style="color-scheme: dark;">
-                    </div>
+    <div class="flex h-screen">
+        <!-- Main Chat UI -->
+        <main class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-blue-600 text-white">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M12 15V12c0-2 2-4 4-4s4 2 4 4v3"/><path d="M8 15V12c0-2-2-4-4-4S0 10 0 12v3"/><path d="M12 15h0a2 0 0 0-2-2h-2a2 0 0 0-2 2v3c0 1.1.9 2 2 2h4a2 0 0 0 2-2v-3c0-1.1-.9-2-2-2Z"/><path d="M18 15h0a2 0 0 1 2-2h2a2 0 0 1 2 2v3c0 1.1-.9 2-2 2h-4a2 0 0 1-2-2v-3c0-1.1.9-2 2-2Z"/></svg>
+                    <h1 class="text-lg md:text-xl font-bold">(Trợ Lý Ảo) Trần Hằng </h1>
                 </div>
-                <div class="mb-6">
-                    <label for="taskInput" class="block text-sm font-medium text-gray-200 mb-1">Nội dung công việc <span class="text-red-400">*</span></label>
-                    <textarea id="taskInput" rows="3" class="input-glass w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="Sửa chữa máy lạnh, thay gas..."></textarea>
-                </div>
-                <button id="addTaskBtn" class="w-full bg-pink-500/50 backdrop-blur-md border border-pink-400/60 text-white font-semibold py-3 px-6 rounded-full hover:bg-pink-500/70 transition-all duration-300 shadow-lg hover:shadow-pink-500/50 flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    <span>Thêm Công Việc</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal Đăng nhập Admin -->
-    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div id="adminModalContent" class="glass-effect w-full max-w-sm relative">
-            <button id="closeAdminModalBtn" class="absolute top-4 right-5 text-white hover:text-gray-300 text-3xl" aria-label="Đóng">&times;</button>
-            <div class="p-8">
-                <h3 class="text-2xl font-bold mb-6 text-center text-white">Đăng Nhập Admin</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label for="usernameInput" class="block text-sm font-medium text-gray-200">Tên người dùng</label>
-                        <input type="text" id="usernameInput" class="mt-1 w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 input-glass">
-                    </div>
-                    <div>
-                        <label for="passwordInput" class="block text-sm font-medium text-gray-200">Mật khẩu</label>
-                        <input type="password" id="passwordInput" class="mt-1 w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 input-glass">
-                    </div>
-                </div>
-                 <p id="loginError" class="text-red-400 text-sm mt-2 text-center hidden">Sai thông tin đăng nhập!</p>
-                <button id="loginBtn" class="mt-6 w-full bg-purple-600/50 backdrop-blur-md border border-purple-500/60 text-white font-semibold py-3 px-6 rounded-full hover:bg-purple-600/70 transition-all duration-300 shadow-lg hover:shadow-purple-500/50">Đăng Nhập</button>
-            </div>
-        </div>
-    </div>
+            </header>
 
+            <div class="chat-container flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900"></div>
 
-    <!-- Nội dung chính của trang -->
-    <div class="container mx-auto max-w-4xl mt-8 sm:mt-16 px-4 pb-20">
-        
-        <div class="text-center mb-6">
-            <h1 class="font-headline animated-gradient-text text-3xl sm:text-4xl md:text-5xl font-extrabold pb-2">Công Ty Thiết Kế In Ấn Hội An</h1>
-            <p class="font-headline animated-gradient-text text-2xl mt-2 font-bold">Địa chỉ : 69 Đào Duy Từ - Hội An</p>
-        </div>
-
-        <header class="text-center mb-8">
-            <h2 class="text-2xl sm:text-4xl font-bold text-white">Quản Lý Công Việc</h2>
-            <p class="text-gray-200 mt-2">Nơi quản lý tất cả công việc của bạn.</p>
-        </header>
-
-        <div class="mb-8 text-center">
-             <button id="openModalBtn" class="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold py-3 px-8 rounded-full hover:bg-white/30 transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 mx-auto">
-                <i class="fas fa-plus-circle"></i>
-                <span>Tạo Công Việc Mới</span>
-            </button>
-        </div>
-        
-        <!-- Khu vực Admin Controls -->
-        <div id="adminControls" class="hidden my-6 p-4 glass-effect">
-            <h3 class="text-lg font-bold text-white mb-3 text-center">Bảng điều khiển Admin</h3>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button id="backupBtn" class="flex-1 bg-green-500/50 backdrop-blur-md border border-green-400/60 text-white font-semibold py-2 px-4 rounded-full hover:bg-green-500/70 transition-all duration-200 flex items-center justify-center gap-2"><i class="fas fa-download"></i> Sao lưu</button>
-                <button id="restoreBtn" class="flex-1 bg-yellow-500/50 backdrop-blur-md border border-yellow-400/60 text-white font-semibold py-2 px-4 rounded-full hover:bg-yellow-500/70 transition-all duration-200 flex items-center justify-center gap-2"><i class="fas fa-upload"></i> Phục hồi</button>
-                <button id="logoutBtn" class="flex-1 bg-red-500/50 backdrop-blur-md border border-red-400/60 text-white font-semibold py-2 px-4 rounded-full hover:bg-red-500/70 transition-all duration-200 flex items-center justify-center gap-2"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
-                <input type="file" id="restoreFileInput" class="hidden" accept=".json">
-            </div>
-        </div>
-
-        <!-- Danh sách công việc -->
-        <div class="glass-effect p-4 sm:p-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-4 border-b border-white/20">
-                <h3 class="text-2xl font-bold text-white mb-2 sm:mb-0">Danh Sách Công Việc</h3>
-                <div class="flex items-center space-x-3">
-                    <label for="hideCompletedToggle" class="text-sm font-medium text-gray-200 select-none">Ẩn việc đã xong</label>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" id="hideCompletedToggle" class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-500/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+            <div id="input-area" class="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+                <div id="image-preview-container" class="mb-2 flex flex-wrap gap-2"></div>
+                <div id="image-info" class="text-xs text-gray-500 dark:text-gray-400 mb-2 h-4"></div>
+                <form id="chat-form" class="flex items-center gap-3">
+                    <input type="file" id="image-input" accept="image/*" multiple>
+                    <label for="image-input" id="image-upload-button" class="cursor-pointer p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </label>
-                </div>
+                    <input type="text" id="user-input" placeholder="Nhập tin nhắn, dán hoặc kéo thả ảnh..." class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
+                    <button type="submit" id="send-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center">
+                        <span id="send-text">Gửi</span>
+                        <svg id="loading-spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
+                </form>
             </div>
-            <ul id="taskList" class="space-y-3"></ul>
-            <div id="no-tasks-message" class="text-center text-gray-200 py-6 hidden">
-                <i class="fas fa-check-circle fa-2x mb-2"></i>
-                <p>Tuyệt vời! Không có công việc nào cần làm.</p>
-            </div>
-        </div>
-        
-        <footer class="text-center mt-10 text-gray-200/80 text-sm">
-            <p>Nâng cấp bởi Gemini với ❤️ và Firebase</p>
-        </footer>
+        </main>
     </div>
-    
-    <!-- Nút Admin nổi -->
-    <button id="openAdminModalBtn" class="fixed bottom-4 right-4 bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-purple-700 transition-transform transform hover:scale-110 z-40">
-        <i class="fas fa-user-shield text-2xl"></i>
-    </button>
 
-    <!-- Firebase SDK -->
     <script type="module">
-        // Import functions from the Firebase SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            query, 
-            orderBy, 
-            doc, 
-            updateDoc, 
-            deleteDoc, 
-            serverTimestamp,
-            writeBatch
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // DOM Elements
+        const chatForm = document.getElementById('chat-form'), userInput = document.getElementById('user-input'),
+              sendButton = document.getElementById('send-button'), sendText = document.getElementById('send-text'), 
+              loadingSpinner = document.getElementById('loading-spinner'), imageInput = document.getElementById('image-input'), 
+              imagePreviewContainer = document.getElementById('image-preview-container'), imageInfo = document.getElementById('image-info'),
+              inputArea = document.getElementById('input-area');
 
-        // --- START: FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDJBY6U0LUtmnk4PrfNeA7UE7qq1FZ84X8",
-            authDomain: "data-chung-a62ee.firebaseapp.com",
-            projectId: "data-chung-a62ee",
-            storageBucket: "data-chung-a62ee.appspot.com",
-            messagingSenderId: "453115303161",
-            appId: "1:453115303161:web:c885f876f4914829863e28",
-            measurementId: "G-QB6WP4SP09"
-        };
-        // --- END: FIREBASE CONFIGURATION ---
-
-        // --- INITIALIZE FIREBASE ---
-        let app, auth, db;
-        let allTasks = [];
-        let unsubscribeFromTasks = null;
-        let isAdminLoggedIn = false;
-
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-        } catch (e) {
-            console.error("Lỗi khởi tạo Firebase. Bạn đã điền đúng firebaseConfig chưa?", e);
-            alert("Lỗi cấu hình Firebase! Vui lòng kiểm tra lại thông tin cấu hình trong mã nguồn. Chi tiết xem ở Console (F12).");
-            document.getElementById('loading-overlay').classList.add('hidden');
-        }
-
-        // --- DOM ELEMENTS ---
-        const customerNameInput = document.getElementById('customerNameInput');
-        const phoneInput = document.getElementById('phoneInput');
-        const addressInput = document.getElementById('addressInput');
-        const timeInput = document.getElementById('timeInput');
-        const taskInput = document.getElementById('taskInput');
-        const addTaskBtn = document.getElementById('addTaskBtn');
-        const taskList = document.getElementById('taskList');
-        const noTasksMessage = document.getElementById('no-tasks-message');
-        const hideCompletedToggle = document.getElementById('hideCompletedToggle');
+        // State
+        const MAX_IMAGES = 50;
+        let chatHistory = [], uploadedImages = [];
+        let currentApiKeyIndex = 0; 
         
-        const taskModal = document.getElementById('taskModal');
-        const modalContent = document.getElementById('modalContent');
-        const openModalBtn = document.getElementById('openModalBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
+        // ===================================================================================
+        // !!! CẤU HÌNH DUY NHẤT TẠI ĐÂY !!!
+        // THAY THẾ CÁC KEY MẪU BẰNG API KEY THẬT CỦA BẠN.
+        // CẢNH BÁO: KHÔNG ĐĂNG TẢI FILE NÀY LÊN INTERNET CÔNG CỘNG VÌ SẼ LÀM LỘ KEY.
+        // ===================================================================================
+        const apiKeys = [
+            "AIzaSyCg4gg9GLf6SPzhYCNMvTZyIuuQZPRw04",
+            "AIzaSyDOfRZnSkMqUAddDF1jZqqzCDZzn68hUyE",
+            "AIzaSyDxr0SL3tbWE2kdp2oBB3Ru4UxpbuimZD0",
+            "AIzaSyBR-duVUWZG-lD5usabYD3NS_-tZySMlcA",
+            "AIzaSyBNagv3kn8vAJzbyMYlvLLCccNGbFa4ySc",
+            // Thêm các key khác vào đây, mỗi key là một chuỗi trong mảng.
+        ];
 
-        const adminModal = document.getElementById('adminModal');
-        const adminModalContent = document.getElementById('adminModalContent');
-        const openAdminModalBtn = document.getElementById('openAdminModalBtn');
-        const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
-        const usernameInput = document.getElementById('usernameInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginError = document.getElementById('loginError');
-
-        const adminControls = document.getElementById('adminControls');
-        const backupBtn = document.getElementById('backupBtn');
-        const restoreBtn = document.getElementById('restoreBtn');
-        const restoreFileInput = document.getElementById('restoreFileInput');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const loadingOverlay = document.getElementById('loading-overlay');
-
-        // --- MODAL HELPER ---
-        function setupModal(modal, openBtn, closeBtn, content) {
-            function show() {
-                modal.classList.remove('hidden');
-                content.classList.remove('modal-leave-to');
-                content.classList.add('modal-enter-from');
-                setTimeout(() => content.classList.add('modal-enter-to'), 10);
+        // --- Core Functions ---
+        const getGeminiResponse = async (retryCount = 0) => {
+            if (apiKeys.length === 0 || apiKeys.every(k => k.startsWith("YOUR_API_KEY"))) {
+                throw new Error("Vui lòng cấu hình ít nhất một API key thật trong mã nguồn.");
             }
-            function hide() {
-                content.classList.remove('modal-enter-to');
-                content.classList.add('modal-leave-to');
-                setTimeout(() => modal.classList.add('hidden'), 200);
-            }
-            if (openBtn) openBtn.addEventListener('click', show);
-            if (closeBtn) closeBtn.addEventListener('click', hide);
-            modal.addEventListener('click', (e) => { if (e.target === modal) hide(); });
-            return { show, hide };
-        }
-
-        const taskModalControls = setupModal(taskModal, openModalBtn, closeModalBtn, modalContent);
-        const adminModalControls = setupModal(adminModal, openAdminModalBtn, closeAdminModalBtn, adminModalContent);
-
-        // --- ADMIN & AUTH LOGIC ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("User signed in anonymously:", user.uid);
-                if (unsubscribeFromTasks) unsubscribeFromTasks();
-                listenForTasks();
-            } else {
-                console.log("User is signed out. Attempting to sign in anonymously.");
-                signInAnonymously(auth).catch((error) => {
-                    console.error("Anonymous sign-in failed:", error);
-                    alert("Không thể kết nối đến máy chủ. Lỗi: " + error.message);
-                    loadingOverlay.classList.add('hidden');
-                });
-            }
-        });
-
-        function handleAdminLogin() {
-            if (usernameInput.value === 'admin' && passwordInput.value === 'admin') {
-                isAdminLoggedIn = true;
-                adminControls.classList.remove('hidden');
-                openAdminModalBtn.classList.add('hidden');
-                adminModalControls.hide();
-                loginError.classList.add('hidden');
-                usernameInput.value = '';
-                passwordInput.value = '';
-                renderAllTasks();
-            } else {
-                loginError.classList.remove('hidden');
-            }
-        }
-        function handleAdminLogout() {
-            isAdminLoggedIn = false;
-            adminControls.classList.add('hidden');
-            openAdminModalBtn.classList.remove('hidden');
-            renderAllTasks();
-        }
-        
-        // --- BACKUP & RESTORE LOGIC ---
-        function backupTasks() {
-            if (allTasks.length === 0) {
-                alert('Không có công việc nào để sao lưu.');
-                return;
-            }
-            const backupData = allTasks.map(({ id, createdAt, ...task }) => {
-                if (task.time?.toDate) {
-                    task.time = task.time.toDate().toISOString();
-                }
-                return task;
-            });
-            const dataStr = JSON.stringify(backupData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            const date = new Date().toISOString().slice(0, 10);
-            a.download = `sao-luu-cong-viec-${date}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        async function handleFileRestore(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (!confirm('CẢNH BÁO: Hành động này sẽ XÓA TẤT CẢ công việc hiện có và thay thế bằng dữ liệu từ tệp này. Bạn có chắc chắn?')) {
-                event.target.value = '';
-                return;
+            if (retryCount >= apiKeys.length) {
+                throw new Error("Tất cả API key đều không hoạt động. Vui lòng kiểm tra lại.");
             }
             
-            loadingOverlay.classList.remove('hidden');
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const restoredTasks = JSON.parse(e.target.result);
-                    if (!Array.isArray(restoredTasks)) throw new Error('Tệp không hợp lệ.');
+            const apiKey = apiKeys[currentApiKeyIndex];
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
+            const systemInstructionText = `
+                Em là trợ lý AI của Trần Thị Thuý Hằng, được phát triển bởi Google, có khả năng tương tự như Gemini.
+                Nhiệm vụ của em là hỗ trợ chị một cách tốt nhất có thể trong mọi lĩnh vực.
 
-                    const batchDelete = writeBatch(db);
-                    allTasks.forEach(task => {
-                        batchDelete.delete(doc(db, "tasks", task.id));
-                    });
-                    await batchDelete.commit();
+                **Khả năng của em:**
+                - Trả lời các câu hỏi kiến thức chung, giải thích các khái niệm phức tạp.
+                - Phân tích và mô tả nội dung hình ảnh do chị cung cấp. Em có thể đọc văn bản trong ảnh, nhận dạng đối tượng, và mô tả cảnh vật.
+                - Sáng tạo nội dung: viết văn, làm thơ, soạn email, v.v.
+                - Hỗ trợ lập trình, dịch thuật và nhiều tác vụ khác.
+                - Luôn luôn trả lời bằng tiếng Việt một cách tự nhiên và thân thiện.
 
-                    const batchAdd = writeBatch(db);
-                    restoredTasks.forEach(task => {
-                        const newDocRef = doc(collection(db, "tasks"));
-                        if (typeof task.time === 'string') {
-                            task.time = new Date(task.time);
-                        }
-                        batchAdd.set(newDocRef, { ...task, createdAt: serverTimestamp() });
-                    });
-                    await batchAdd.commit();
-                    
-                    alert('Phục hồi thành công!');
-                } catch (err) {
-                    console.error("Restore error:", err);
-                    alert('Lỗi: Không thể đọc tệp sao lưu.');
-                } finally {
-                    loadingOverlay.classList.add('hidden');
-                    event.target.value = '';
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- CORE DATA & RENDER LOGIC ---
-        function listenForTasks() {
-            const tasksCollection = collection(db, 'tasks');
-            const q = query(tasksCollection, orderBy('createdAt', 'desc'));
-
-            unsubscribeFromTasks = onSnapshot(q, (querySnapshot) => {
-                allTasks = [];
-                querySnapshot.forEach((doc) => {
-                    allTasks.push({ id: doc.id, ...doc.data() });
-                });
-                renderAllTasks();
-                loadingOverlay.classList.add('hidden');
-            }, (error) => {
-                console.error("Error listening to tasks:", error);
-                alert("Mất kết nối với cơ sở dữ liệu.");
-                loadingOverlay.classList.add('hidden');
-            });
-        }
-
-        function renderAllTasks() {
-            taskList.innerHTML = '';
-            allTasks.forEach((taskData) => {
-                const { id, customerName, phone, address, time, text, completed } = taskData;
+                **Quản lý đơn hàng (QUAN TRỌNG):**
+                Chị có thể yêu cầu em lưu lại các mặt hàng và số lượng theo ngày giờ vào bộ nhớ cục bộ của trình duyệt.
+                Để lưu đơn hàng, chị chỉ cần nhập tên mặt hàng và số lượng.
+                Ví dụ:
+                - "cá cơm 1kg"
+                - "rau cải 2 bó"
+                - "cá mú 3 con"
+                - "mề gà 500g"
                 
-                const li = document.createElement('li');
-                li.className = `task-item-glass flex flex-col sm:flex-row items-start justify-between p-3 sm:p-4 ${completed ? 'completed' : ''}`;
-                li.dataset.id = id;
-                li.dataset.completed = completed;
+                Khi chị nhập các mặt hàng và số lượng như trên, em sẽ phản hồi lại bằng định dạng đặc biệt sau để hệ thống có thể xử lý:
+                \`ORDER_SAVE: [{"item": "Tên mặt hàng 1", "quantity": "Số lượng 1"}, {"item": "Tên mặt hàng 2", "quantity": "Số lượng 2"}]\`
+                Ví dụ cụ thể cho "cá cơm 1kg, rau cải 2 bó":
+                \`ORDER_SAVE: [{"item": "cá cơm", "quantity": "1kg"}, {"item": "rau cải", "quantity": "2 bó"}]\`
+                Đảm bảo định dạng JSON hợp lệ, bao gồm dấu ngoặc vuông cho mảng và dấu ngoặc nhọn cho từng đối tượng mặt hàng.
 
-                const completeBtnText = completed ? 'Làm lại' : 'Hoàn thành';
-                const completeBtnClass = completed ? 'bg-yellow-500/50 border-yellow-400/60 hover:bg-yellow-500/70' : 'bg-green-500/50 border-green-400/60 hover:bg-green-500/70';
-                const taskDate = time?.toDate ? time.toDate() : new Date(time);
+                Khi chị muốn xem lại đơn hàng, chị có thể nói:
+                - "Lấy đơn hàng" hoặc "Xuất đơn hàng hôm nay": Em sẽ hiểu là chị muốn lấy tất cả đơn hàng đã nhập trong ngày hôm nay và phản hồi lại bằng định dạng: \`ORDER_RETRIEVE: CURRENT_DAY\`
+                - "Lấy đơn hàng ngày YYYY-MM-DD" hoặc "Xuất đơn hàng ngày YYYY-MM-DD": Em sẽ phản hồi lại bằng định dạng: \`ORDER_RETRIEVE: YYYY-MM-DD\` (trong đó YYYY-MM-DD là ngày cụ thể, ví dụ: 2025-07-21)
+                - "Lấy đơn hàng ngày DD tháng MM" hoặc "Xuất đơn hàng ngày DD tháng MM": Em sẽ hiểu là chị muốn lấy đơn hàng của ngày đó trong năm hiện tại và phản hồi lại bằng định dạng: \`ORDER_RETRIEVE: YYYY-MM-DD\` (ví dụ: "Lấy đơn hàng ngày 21 tháng 7" sẽ là \`ORDER_RETRIEVE: 2025-07-21\` nếu năm hiện tại là 2025).
 
-                const deleteButtonHTML = isAdminLoggedIn ? `
-                    <button data-action="delete" class="flex items-center justify-center bg-red-500/50 backdrop-blur-md border border-red-400/60 text-white hover:bg-red-500/70 font-semibold py-2 px-3 rounded-full text-sm transition-all duration-200 w-full">
-                        <i class="fas fa-trash mr-2"></i> Xóa
-                    </button>
-                ` : '';
+                Sau khi hệ thống xử lý xong, em sẽ thông báo lại cho chị.
 
-                li.innerHTML = `
-                    <div class="flex-grow mr-0 sm:mr-4 mb-4 sm:mb-0 w-full">
-                        <p class="font-bold text-lg text-white task-content">${text}</p>
-                        <div class="customer-info grid grid-cols-1 md:grid-cols-2 text-sm text-gray-200 mt-2 gap-x-4 gap-y-1">
-                            <span class="truncate"><i class="fas fa-user fa-fw mr-1.5 text-blue-300"></i>${customerName}</span>
-                            <span class="truncate"><i class="fas fa-clock fa-fw mr-1.5 text-orange-300"></i>${taskDate.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                            ${phone ? `<span class="truncate"><i class="fas fa-phone fa-fw mr-1.5 text-green-300"></i>${phone}</span>` : ''}
-                            ${address ? `<span class="truncate"><i class="fas fa-map-marker-alt fa-fw mr-1.5 text-purple-300"></i>${address}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-stretch space-y-2 flex-shrink-0 w-full sm:w-32">
-                        <button data-action="toggle" class="font-semibold py-2 px-3 rounded-full text-sm text-white transition-all duration-200 w-full backdrop-blur-md border ${completeBtnClass}">
-                            ${completeBtnText}
-                        </button>
-                        ${deleteButtonHTML}
-                    </div>
-                `;
-                taskList.appendChild(li);
-            });
-            updateCompletedTasksVisibility();
-        }
-        
-        // --- UI UTILITY FUNCTIONS ---
-        function checkEmptyState() {
-            const hasVisibleTasks = Array.from(taskList.children).some(task => !task.classList.contains('hidden'));
-            noTasksMessage.classList.toggle('hidden', !(taskList.children.length > 0 && !hasVisibleTasks));
-        }
+                **Thông tin bổ sung (chỉ cung cấp khi được hỏi):**
+                Nếu chị hỏi về "Công Ty Thiết Kế In Ấn Hội An", em có thể cung cấp thông tin sau:
+                - **Địa chỉ:** 69 Đào Duy Từ, Hội An.
+                - **Zalo / SĐT:** 0935 000 442.
+                
+                **Tính toán giá decal:**
+                Nếu chị cung cấp kích thước (ví dụ: "0,2x0,5" hoặc "0.2x0.5") và/hoặc số lượng (ví dụ: "x2" hoặc "nhân 2") cho **decal**, em hãy thực hiện tính toán giá.
+                - Giá decal trắng là 85.000 VNĐ/m².
+                - Công thức tính: (chiều dài * chiều rộng * số lượng) * 85000.
+                - Nếu chị không cung cấp số lượng, mặc định số lượng là 1.
+                - Ví dụ: "0,2x0,5x2 decal" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 2 decal.
+                - Ví dụ: "0,2x0,5 decal" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 1 decal.
 
-        function updateCompletedTasksVisibility() {
-            const shouldHide = hideCompletedToggle.checked;
-            taskList.querySelectorAll('li').forEach(li => {
-                const isCompleted = li.dataset.completed === 'true';
-                li.classList.toggle('hidden', shouldHide && isCompleted);
-            });
-            localStorage.setItem('hideCompletedState', shouldHide);
-            checkEmptyState();
-        }
+                **Tính toán giá in decal thợ:**
+                Nếu chị cung cấp kích thước và/hoặc số lượng cho **in decal thợ**, em hãy thực hiện tính toán giá.
+                - Giá in decal thợ là 80.000 VNĐ/m².
+                - Công thức tính: (chiều dài * chiều rộng * số lượng) * 80000.
+                - Ví dụ: "0,2x0,5x2 in decal thợ" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 2 in decal thợ.
 
-        // --- EVENT HANDLERS ---
-        async function handleTaskListClick(event) {
-            const button = event.target.closest('button[data-action]');
-            if (!button) return;
+                **Tính toán giá decal bế (hoặc bế):**
+                Nếu chị cung cấp kích thước và/hoặc số lượng cho **decal bế** hoặc chỉ **bế**, em hãy thực hiện tính toán giá.
+                - Giá decal bế là 145.000 VNĐ/m².
+                - Công thức tính: (chiều dài * chiều rộng * số lượng) * 145000.
+                - Nếu chị không cung cấp số lượng, mặc định số lượng là 1.
+                - Ví dụ: "0,2x0,5x2 decal bế" hoặc "0,2x0,5x2 bế" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 2 decal bế.
+                - Ví dụ: "0,2x0,5 decal bế" hoặc "0,2x0,5 bế" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 1 decal bế.
 
-            const li = button.closest('li');
-            const taskId = li.dataset.id;
-            const action = button.dataset.action;
+                **Tính toán giá in bạt:**
+                Nếu chị cung cấp kích thước (ví dụ: "0,2x0,5" hoặc "0.2x0.5") và/hoặc số lượng (ví dụ: "x2" hoặc "nhân 2") cho **in bạt**, em hãy thực hiện tính toán giá.
+                - Giá in bạt là 35.000 VNĐ/m².
+                - Công thức tính: (chiều dài * chiều rộng * số lượng) * 35000.
+                - Nếu chị không cung cấp số lượng, mặc định số lượng là 1.
+                - Ví dụ: "0,2x0,5x2 in bạt" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 2 in bạt.
+                - Ví dụ: "0,2x0,5 in bạt" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 1 in bạt.
 
-            if (!taskId) return;
+                **Tính toán giá in bạt thợ:**
+                Nếu chị cung cấp kích thước và/hoặc số lượng cho **in bạt thợ**, em hãy thực hiện tính toán giá.
+                - Giá in bạt thợ là 30.000 VNĐ/m².
+                - Công thức tính: (chiều dài * chiều rộng * số lượng) * 30000.
+                - Ví dụ: "0,2x0,5x2 in bạt thợ" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 2 in bạt thợ.
 
-            const taskDocRef = doc(db, "tasks", taskId);
+                **Tính toán giá cán màn:**
+                Nếu chị cung cấp kích thước (ví dụ: "0,2x0,5" hoặc "0.2x0.5") và/hoặc số lượng (ví dụ: "x2" hoặc "nhân 2") cho **cán màn**, em hãy thực hiện tính toán giá.
+                - Giá cán màn là 100.000 VNĐ/m².
+                - Công thức tính: (chiều dài * chiều rộng * số lượng) * 100000.
+                - Nếu chị không cung cấp số lượng, mặc định số lượng là 1.
+                - Ví dụ: "0,2x0,5x2 cán màn" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 2 cán màn.
+                - Ví dụ: "0,2x0,5 cán màn" sẽ được hiểu là dài 0.2m, rộng 0.5m, số lượng 1 cán màn.
+                
+                **Tính thêm phí hóa đơn:**
+                Nếu chị nói "có hóa đơn" hoặc "lấy hóa đơn" hoặc "xuất hóa đơn" trong cùng một yêu cầu tính giá, hãy tính thêm 8% trên tổng giá trị đã tính.
+                - Công thức: Tổng giá * 1.08.
+                - Hãy thông báo rõ ràng về việc cộng thêm 8% cho hóa đơn.
 
-            if (action === 'toggle') {
-                const isCompleted = li.dataset.completed === 'true';
-                try {
-                    await updateDoc(taskDocRef, { completed: !isCompleted });
-                } catch (e) {
-                    console.error("Error updating task: ", e);
-                    alert("Lỗi cập nhật công việc.");
+                - Luôn làm tròn kết quả đến hai chữ số thập phân nếu cần và hiển thị đơn vị VNĐ.
+                - **QUAN TRỌNG:** Khi hiển thị kết quả giá tiền, hãy định dạng số theo kiểu "000,000,000 VNĐ" (ví dụ: 123,456,789 VNĐ).
+            `;
+
+            const payload = {
+                contents: chatHistory,
+                systemInstruction: {
+                    parts: [{ text: systemInstructionText }]
+                },
+                generationConfig: { 
+                    temperature: 0.7, 
+                    topP: 1, 
+                    topK: 40,
+                    maxOutputTokens: 2048 
                 }
-            }
-
-            if (action === 'delete') {
-                if (!isAdminLoggedIn) {
-                    alert("Bạn không có quyền thực hiện hành động này.");
-                    return;
-                }
-                const taskText = li.querySelector('.task-content')?.textContent || 'công việc này';
-                if (confirm(`Bạn có chắc muốn xóa "${taskText}"?`)) {
-                    try {
-                        await deleteDoc(taskDocRef);
-                    } catch (e) {
-                        console.error("Error deleting task: ", e);
-                        alert("Lỗi xóa công việc.");
-                    }
-                }
-            }
-        }
-
-        async function handleAddTask() {
-            const taskData = {
-                customerName: customerNameInput.value.trim(),
-                phone: phoneInput.value.trim(),
-                address: addressInput.value.trim(),
-                time: new Date(timeInput.value),
-                text: taskInput.value.trim(),
-                completed: false,
-                createdAt: serverTimestamp()
             };
-
-            if (!taskData.customerName || !timeInput.value || !taskData.text) {
-                alert('Vui lòng nhập các trường bắt buộc!');
-                return;
-            }
 
             try {
-                await addDoc(collection(db, "tasks"), taskData);
-                [customerNameInput, phoneInput, addressInput, timeInput, taskInput].forEach(input => input.value = '');
-                taskModalControls.hide();
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                alert("Lỗi khi thêm công việc mới.");
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(`Lỗi API: ${errorBody.error.message}`);
+                }
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts) {
+                    return result.candidates[0].content.parts[0].text;
+                }
+                if (result.promptFeedback && result.promptFeedback.blockReason) {
+                    return `Yêu cầu của chị đã bị chặn vì: ${result.promptFeedback.blockReason}.`;
+                }
+                throw new Error("Không nhận được phản hồi hợp lệ từ API.");
+            } catch (error) {
+                console.error(`API key tại vị trí ${currentApiKeyIndex} thất bại:`, error.message);
+                currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
+                console.log(`Chuyển sang API key tại vị trí ${currentApiKeyIndex}`);
+                return getGeminiResponse(retryCount + 1);
             }
-        }
+        };
 
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-             if (!db) return;
-            loginBtn.addEventListener('click', handleAdminLogin);
-            passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
-            logoutBtn.addEventListener('click', handleAdminLogout);
-            backupBtn.addEventListener('click', backupTasks);
-            restoreBtn.addEventListener('click', () => restoreFileInput.click());
-            restoreFileInput.addEventListener('change', handleFileRestore);
-            taskList.addEventListener('click', handleTaskListClick);
-            hideCompletedToggle.addEventListener('change', updateCompletedTasksVisibility);
-            addTaskBtn.addEventListener('click', handleAddTask);
-            taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddTask(); }});
-            const savedHideState = JSON.parse(localStorage.getItem('hideCompletedState'));
-            hideCompletedToggle.checked = savedHideState !== false; 
+        // --- Local Storage Functions ---
+        const LOCAL_STORAGE_KEY = 'all_orders';
+
+        const saveOrder = async (items) => {
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                let allOrders = storedData ? JSON.parse(storedData) : {};
+
+                const today = new Date();
+                const orderDate = today.toISOString().slice(0, 10); // YYYY-MM-DD
+
+                if (!allOrders[orderDate]) {
+                    allOrders[orderDate] = [];
+                }
+
+                allOrders[orderDate].push({
+                    items: items,
+                    timestamp: new Date().toISOString() // Store as ISO string
+                });
+
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allOrders));
+                appendMessage({ text: "Đơn hàng của chị đã được lưu thành công vào bộ nhớ cục bộ của trình duyệt!" }, 'bot');
+            } catch (error) {
+                console.error("Lỗi khi lưu đơn hàng vào Local Storage:", error);
+                appendMessage({ text: `Lỗi khi lưu đơn hàng: ${error.message}. Vui lòng thử lại.` }, 'bot', true);
+            }
+        };
+
+        const getOrders = async (date = null) => {
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                const allOrders = storedData ? JSON.parse(storedData) : {};
+
+                let targetDate = date;
+                let messagePrefix = 'Đây là các đơn hàng chị đã lưu:';
+
+                if (date === 'CURRENT_DAY') {
+                    targetDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                    messagePrefix = `Đây là tất cả đơn hàng chị đã nhập trong ngày hôm nay (${targetDate}):`;
+                } else if (date) {
+                    messagePrefix = `Đây là các đơn hàng chị đã nhập vào ngày ${date}:`;
+                }
+
+                const ordersForDate = allOrders[targetDate] || [];
+
+                if (ordersForDate.length === 0) {
+                    appendMessage({ text: `Không tìm thấy đơn hàng nào cho ngày ${targetDate === new Date().toISOString().slice(0, 10) ? 'hôm nay' : targetDate}.` }, 'bot');
+                    return;
+                }
+
+                let orderList = [];
+                ordersForDate.forEach((orderData) => {
+                    const orderTimestamp = new Date(orderData.timestamp);
+                    const formattedTime = orderTimestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    const formattedDate = orderTimestamp.toLocaleDateString('vi-VN');
+                    
+                    let itemsString = orderData.items.map(item => `${item.item} (${item.quantity})`).join(', ');
+                    orderList.push(`- Đơn hàng lúc ${formattedTime} ngày ${formattedDate}: ${itemsString}`);
+                });
+
+                appendMessage({ text: `${messagePrefix}\n${orderList.join('\n')}` }, 'bot');
+
+            } catch (error) {
+                console.error("Lỗi khi lấy đơn hàng từ Local Storage:", error);
+                appendMessage({ text: `Lỗi khi lấy đơn hàng: ${error.message}. Vui lòng thử lại.` }, 'bot', true);
+            }
+        };
+
+        // --- UI & Event Handlers ---
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message && uploadedImages.length === 0) return;
+
+            if (apiKeys.length === 0 || apiKeys.every(k => k.startsWith("YOUR_API_KEY"))) { 
+                appendMessage({ text: "Lỗi: Vui lòng cấu hình API key trong mã nguồn của file HTML." }, 'bot', true); 
+                return; 
+            }
+
+            const userMessageData = { text: message, images: uploadedImages.map(img => img.file) };
+            appendMessage(userMessageData, 'user');
+            
+            const userParts = [];
+            if (message) userParts.push({ text: message });
+            uploadedImages.forEach(img => userParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } }));
+            chatHistory.push({ role: "user", parts: userParts });
+
+            userInput.value = ''; 
+            imagePreviewContainer.innerHTML = ''; 
+            uploadedImages = []; 
+            updateImageCount();
+            
+            toggleLoading(true);
+            try {
+                const botResponse = await getGeminiResponse();
+                
+                // Check for structured commands from the bot
+                if (botResponse.startsWith('ORDER_SAVE:')) {
+                    try {
+                        const jsonString = botResponse.substring('ORDER_SAVE:'.length).trim();
+                        const itemsToSave = JSON.parse(jsonString);
+                        if (Array.isArray(itemsToSave) && itemsToSave.every(item => item.item && item.quantity)) {
+                            await saveOrder(itemsToSave);
+                        } else {
+                            appendMessage({ text: "Em xin lỗi, em không hiểu định dạng đơn hàng chị muốn lưu. Vui lòng thử lại với định dạng chuẩn hơn." }, 'bot', true);
+                        }
+                    } catch (parseError) {
+                        console.error("Lỗi phân tích JSON đơn hàng:", parseError);
+                        appendMessage({ text: "Em xin lỗi, em gặp lỗi khi xử lý đơn hàng của chị. Vui lòng thử lại." }, 'bot', true);
+                    }
+                } else if (botResponse.startsWith('ORDER_RETRIEVE:')) {
+                    const dateCommand = botResponse.substring('ORDER_RETRIEVE:'.length).trim();
+                    await getOrders(dateCommand);
+                } else {
+                    // Normal text response
+                    appendMessage({ text: botResponse }, 'bot');
+                    chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
+                }
+            } catch (error) {
+                console.error('Lỗi cuối cùng khi gửi tin nhắn:', error);
+                appendMessage({ text: error.message }, 'bot', true);
+            } finally {
+                toggleLoading(false);
+            }
         });
+        
+        // --- Initialization ---
+        const initializeAppUI = () => {
+            appendMessage({ text: "Xin chào chị! Em là trợ lý ảo của Trần Thị Thuý Hằng. Em có thể giúp gì cho chị hôm nay?" }, 'bot');
+            new VanillaTelex(userInput);
+        };
+
+        const main = async () => {
+            initializeAppUI();
+            // No Firebase initialization needed for local storage
+        };
+
+        // --- Helper functions ---
+        function processFiles(files) { if (!files || files.length === 0) return; imageInfo.classList.remove('text-red-500'); const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/')); if (imageFiles.length === 0) return; if (uploadedImages.length + imageFiles.length > MAX_IMAGES) { imageInfo.textContent = `Chị chỉ có thể tải lên tối đa ${MAX_IMAGES} ảnh.`; imageInfo.classList.add('text-red-500'); return; } for (const file of imageFiles) { const isDuplicate = uploadedImages.some(img => img.file.name === file.name && img.file.size === file.size && img.file.lastModified === file.lastModified); if (isDuplicate) continue; const reader = new FileReader(); reader.onload = (event) => { const base64Data = event.target.result.split(',')[1]; uploadedImages.push({ data: base64Data, mimeType: file.type, file: file }); createImagePreview(event.target.result, file); updateImageCount(); }; reader.readAsDataURL(file); } }
+        imageInput.addEventListener('change', (e) => { processFiles(e.target.files); e.target.value = ''; });
+        userInput.addEventListener('paste', (e) => { const files = e.clipboardData?.files; if (files && files.length > 0) { e.preventDefault(); processFiles(files); } });
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { inputArea.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }); });
+        ['dragenter', 'dragover'].forEach(eventName => { inputArea.addEventListener(eventName, () => inputArea.classList.add('drag-over')); });
+        ['dragleave', 'drop'].forEach(eventName => { inputArea.addEventListener(eventName, () => inputArea.classList.remove('drag-over')); });
+        inputArea.addEventListener('drop', (e) => { const files = e.dataTransfer?.files; if (files) { processFiles(files); } });
+        function createImagePreview(dataUrl, file) { const previewWrapper = document.createElement('div'); previewWrapper.className = 'relative'; const img = document.createElement('img'); img.src = dataUrl; img.className = 'h-16 w-16 object-cover rounded-md'; previewWrapper.appendChild(img); const removeBtn = document.createElement('button'); removeBtn.innerHTML = '&times;'; removeBtn.className = 'absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs leading-none'; removeBtn.onclick = () => { uploadedImages = uploadedImages.filter(img => img.file !== file); previewWrapper.remove(); updateImageCount(); }; previewWrapper.appendChild(removeBtn); imagePreviewContainer.appendChild(previewWrapper); }
+        function updateImageCount() { imageInfo.classList.remove('text-red-500'); if (uploadedImages.length > 0) { imageInfo.textContent = `Đã tải lên ${uploadedImages.length}/${MAX_IMAGES} ảnh.`; } else { imageInfo.textContent = ''; } }
+        function appendMessage(data, sender, isError = false) { const { text, images } = data; const messageWrapper = document.createElement('div'); messageWrapper.className = `flex items-start gap-3 mb-4 ${sender === 'user' ? 'justify-end' : ''}`; const messageContent = document.createElement('div'); messageContent.className = `p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-xl ${sender === 'user' ? 'bg-blue-600 text-white' : isError ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-gray-200 dark:bg-gray-700'}`; if (images && images.length > 0) { const imageGrid = document.createElement('div'); imageGrid.className = 'grid grid-cols-3 gap-1'; images.forEach(file => { const img = document.createElement('img'); img.src = URL.createObjectURL(file); img.className = 'w-full h-auto object-cover rounded'; img.onload = () => URL.revokeObjectURL(img.src); imageGrid.appendChild(img); }); messageContent.appendChild(imageGrid); } if (text) { const textElement = document.createElement('p'); textElement.className = `text-sm ${sender === 'bot' && !isError ? 'text-gray-800 dark:text-gray-200' : ''} ${(images && images.length > 0) ? 'mt-2' : ''}`; textElement.innerHTML = text.replace(/\n/g, '<br>'); messageContent.appendChild(textElement); } const avatar = document.createElement('div'); avatar.className = 'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-white'; if (sender === 'user') { avatar.className += ' bg-gray-500'; avatar.textContent = 'U'; messageWrapper.appendChild(messageContent); messageWrapper.appendChild(avatar); } else { avatar.className += isError ? ' bg-red-500' : ' bg-blue-500'; avatar.textContent = 'B'; messageWrapper.appendChild(avatar); messageWrapper.appendChild(messageContent); } const mainChatContainer = document.querySelector('.chat-container'); mainChatContainer.appendChild(messageWrapper); mainChatContainer.scrollTop = mainChatContainer.scrollHeight; }
+        function toggleLoading(isLoading) { sendButton.disabled = isLoading; userInput.disabled = isLoading; document.getElementById('image-upload-button').style.pointerEvents = isLoading ? 'none' : 'auto'; sendText.classList.toggle('hidden', isLoading); loadingSpinner.classList.toggle('hidden', !isLoading); if (!isLoading) { userInput.focus(); } }
+
+        // Start the application
+        main();
     </script>
 </body>
 </html>
