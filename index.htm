@@ -3,171 +3,684 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang web nhập liệu</title>
+    <title>HAR Casino G98 Club - Macau Edition</title>
     <!-- Tải Tailwind CSS để tạo kiểu dáng hiện đại -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Sử dụng phông chữ Inter từ Google Fonts -->
+    <!-- Tải Supabase client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Sử dụng phông chữ Inter từ Google Fonts cho nội dung chính -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tải phông chữ Cinzel cho tiêu đề sòng bài -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            color: #d1d5db; /* gray-300 */
+        }
+        .casino-title {
+            font-family: 'Cinzel', serif;
         }
         /* Hiệu ứng mượt mà khi hover */
         .input-group:hover .input-label {
-            color: #4f46e5;
+            color: #facc15; /* yellow-400 */
         }
         .input-group:hover .input-field {
-            border-color: #4f46e5;
+            border-color: #facc15; /* yellow-400 */
+        }
+        /* Tạo hiệu ứng nhấp nháy cho nút micro khi đang ghi âm */
+        .speech-to-text-btn.recording {
+            color: #ef4444; /* red-500 */
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        /* Thêm hiệu ứng chuyển đổi màu nền mượt mà */
+        .input-field {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        /* Hiệu ứng chuyển màu vàng rực rỡ cho tiêu đề */
+        .gradient-text {
+            background-image: linear-gradient(45deg, #f59e0b, #facc15, #eab308, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradient-animation 6s ease infinite, glow-animation 2s ease-in-out infinite alternate;
+            background-size: 300% 300%;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Hiệu ứng phát sáng kiểu đèn neon nổi bật hơn */
+        @keyframes glow-animation {
+            from {
+                text-shadow: 
+                    -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000, 1px 1px 1px #000,
+                    0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fde047, 0 0 20px #facc15,
+                    0 0 25px #eab308, 0 0 30px #ca8a04, 0 0 40px #b45309;
+            }
+            to {
+                text-shadow: 
+                    -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000, 1px 1px 1px #000,
+                    0 0 10px #fff, 0 0 20px #fde047, 0 0 30px #facc15, 0 0 40px #eab308,
+                    0 0 50px #ca8a04, 0 0 60px #a16207, 0 0 75px #b45309;
+            }
+        }
+        /* Nền hoa văn đỏ đậm sang trọng kiểu Macau */
+        .macau-bg {
+            background-color: #1a0000; /* Màu nền dự phòng đỏ đậm */
+            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/dark_embroidery.png');
+            background-repeat: repeat;
+        }
+        /* Nút bấm có hiệu ứng chuyển màu vàng */
+        .gold-button {
+            background-image: linear-gradient(to right, #ca8a04, #facc15, #ca8a04);
+            background-size: 200% auto;
+            transition: background-position 0.5s;
+            color: #422006; /* Chữ màu nâu đậm */
+        }
+        .gold-button:hover {
+            background-position: right center;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center min-h-screen p-4">
+<body class="flex items-start justify-center min-h-screen px-4 py-12">
 
-    <!-- Container chính cho nội dung trang web -->
-    <div class="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-4xl text-center backdrop-blur-sm bg-white/70">
-        <!-- Tiêu đề trang web -->
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Trang web nhập liệu</h1>
-        <p class="text-gray-600 mb-8">
-            Vui lòng điền thông tin vào ba ô bất kỳ trong mỗi hàng. Ô còn lại sẽ tự động tính toán để tổng bằng 0.
-            Bạn có thể thêm tối đa 15 hàng nhập liệu.
+    <!-- Modal khởi động để kích hoạt âm thanh -->
+    <div id="startupModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-gray-900 border-2 border-yellow-500/50 p-8 rounded-2xl shadow-xl text-center mx-4">
+            <h2 class="text-2xl font-bold mb-4 casino-title gradient-text" style="animation: none; -webkit-text-fill-color: initial; color: #facc15;">Chào Mừng Tới HAR Casino</h2>
+            <p class="text-gray-400 mb-6">Nhấn "Bắt đầu" để vào sòng và kích hoạt âm thanh.</p>
+            <button id="startButton" class="gold-button font-bold py-3 px-8 rounded-lg text-lg transform hover:scale-105">
+                Bắt đầu
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal đăng nhập Admin -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm hidden">
+        <div class="bg-gray-900 border-2 border-yellow-500/50 p-8 rounded-2xl shadow-xl text-left mx-4 w-full max-w-sm relative">
+             <button id="closeLoginModal" class="absolute top-2 right-3 text-white text-2xl font-bold">&times;</button>
+            <h2 class="text-2xl font-bold mb-6 text-center casino-title text-yellow-400">Đăng Nhập Admin</h2>
+            <form id="adminLoginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-300 mb-1">Tên người dùng</label>
+                    <input type="text" id="username" class="w-full p-2 rounded-md bg-gray-800 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Mật khẩu</label>
+                    <input type="password" id="password" class="w-full p-2 rounded-md bg-gray-800 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                <button type="submit" class="gold-button w-full font-bold py-2 px-4 rounded-lg">Đăng Nhập</button>
+                <p id="loginError" class="text-red-500 text-center text-sm mt-4"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Lỗi Bảo Mật Supabase (RLS) -->
+    <div id="rlsErrorModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm hidden">
+        <div class="bg-red-900 border-2 border-red-500/50 p-8 rounded-2xl shadow-xl text-left mx-4 w-full max-w-lg relative">
+            <button id="closeRlsErrorModal" class="absolute top-2 right-3 text-white text-2xl font-bold">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-center casino-title text-yellow-300">Lỗi Cấu Hình Bảo Mật</h2>
+            <p class="text-gray-200 mb-4">
+                Ứng dụng không thể lưu hoặc xoá dữ liệu. Đây là lỗi cài đặt trên Supabase, không phải lỗi code.
+            </p>
+            <p class="text-gray-200 mb-4 font-bold">
+                Vui lòng làm theo các bước sau trong trang quản trị Supabase của bạn:
+            </p>
+            <ol class="list-decimal list-inside text-gray-200 space-y-2">
+                <li>Đăng nhập vào <strong>Supabase</strong> và vào Project của bạn.</li>
+                <li>Ở menu bên trái, chọn <strong>Authentication</strong> (biểu tượng ổ khóa).</li>
+                <li>Chọn tab <strong>Policies</strong>.</li>
+                <li>Tìm bảng <strong>game_rounds</strong> và tạo <strong>New Policy</strong>.</li>
+                <li>Chọn mẫu <strong>"Enable insert access for all users"</strong> để cho phép LƯU.</li>
+                <li>Tạo một Policy mới nữa và chọn mẫu <strong>"Enable read access for all users"</strong> để cho phép XEM LỊCH SỬ.</li>
+                <li>(Nếu cần) Tạo Policy thứ ba và chọn mẫu <strong>"Enable delete access for all users"</strong> để cho phép Nút XÓA của Admin hoạt động.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận Xóa -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm hidden">
+        <div class="bg-gray-900 border-2 border-red-500/50 p-8 rounded-2xl shadow-xl text-center mx-4 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4 text-yellow-300">Bạn có chắc chắn?</h2>
+            <p class="text-gray-300 mb-6">Bạn có muốn xóa toàn bộ lịch sử ván đấu không? Hành động này không thể hoàn tác.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancelDeleteButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Hủy</button>
+                <button id="confirmDeleteButton" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Xóa</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Container riêng cho hình nền và lớp phủ -->
+    <div class="fixed inset-0 -z-10 macau-bg">
+        <div class="absolute inset-0 bg-black/50"></div>
+    </div>
+    
+    <!-- Wrapper để căn giữa nội dung -->
+    <div class="relative bg-black/80 backdrop-blur-sm border-2 border-yellow-500/50 p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-4xl text-center">
+        
+        <!-- Nút Admin -->
+        <div class="absolute top-4 right-4">
+            <button id="adminButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-xs">
+                Admin
+            </button>
+        </div>
+
+        <h1 class="text-4xl md:text-5xl font-bold mb-2 gradient-text casino-title">
+            <span class="text-xl md:text-2xl text-yellow-400 align-middle">♦</span>
+            HAR CASINO G98 CLUB
+            <span class="text-xl md:text-2xl text-red-500 align-middle">♥</span>
+        </h1>
+        <p class="text-gray-400 text-xs md:text-sm mb-8">
+            Dữ liệu được đồng bộ hoá thời gian thực.
         </p>
 
         <!-- Container chứa các hàng nhập liệu -->
         <div id="inputRowsContainer">
-            <!-- Hàng nhập liệu ban đầu -->
-            <form class="input-row flex flex-col md:flex-row gap-4 mb-4">
+            <!-- Hàng nhập liệu ban đầu 1 -->
+            <div class="input-row flex flex-col sm:flex-row gap-4 mb-4 items-center sm:items-end">
+                <div class="status-indicator w-8 h-8 bg-gray-700 rounded-full flex-shrink-0 transition-colors duration-300 sm:mb-5 shadow-inner"></div>
                 <div class="flex-1 input-group transition duration-300">
-                    <label class="input-label block text-left text-sm font-medium text-gray-700 mb-1 transition duration-300">Ô nhập liệu 1</label>
-                    <input type="number" class="input-field w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300" placeholder="Nhập vào đây">
+                    <label class="input-label block text-center text-4xl font-semibold text-yellow-400 mb-2 transition duration-300">Vi</label>
+                    <div class="relative">
+                        <input type="number" step="5" class="input-field w-full p-4 pr-16 text-4xl text-center border rounded-xl focus:outline-none focus:ring-2 bg-yellow-100 text-gray-900 border-gray-300 focus:ring-yellow-500 focus:border-yellow-500" placeholder="0">
+                        <button type="button" class="speech-to-text-btn absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-yellow-400 focus:outline-none">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H7v1h6v-1h-2v-2.07z"></path></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 input-group transition duration-300">
-                    <label class="input-label block text-left text-sm font-medium text-gray-700 mb-1 transition duration-300">Ô nhập liệu 2</label>
-                    <input type="number" class="input-field w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300" placeholder="Nhập vào đây">
+                    <label class="input-label block text-center text-4xl font-semibold text-yellow-400 mb-2 transition duration-300">Phú</label>
+                    <div class="relative">
+                        <input type="number" step="5" class="input-field w-full p-4 pr-16 text-4xl text-center border rounded-xl focus:outline-none focus:ring-2 bg-yellow-100 text-gray-900 border-gray-300 focus:ring-yellow-500 focus:border-yellow-500" placeholder="0">
+                        <button type="button" class="speech-to-text-btn absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-yellow-400 focus:outline-none">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H7v1h6v-1h-2v-2.07z"></path></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 input-group transition duration-300">
-                    <label class="input-label block text-left text-sm font-medium text-gray-700 mb-1 transition duration-300">Ô nhập liệu 3</label>
-                    <input type="number" class="input-field w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300" placeholder="Nhập vào đây">
+                    <label class="input-label block text-center text-4xl font-semibold text-yellow-400 mb-2 transition duration-300">Uyên</label>
+                    <input type="number" class="input-field w-full p-4 text-4xl text-center border rounded-xl focus:outline-none bg-yellow-100 text-gray-900 border-gray-300" placeholder="0" readonly>
+                </div>
+            </div>
+            <!-- Hàng nhập liệu ban đầu 2 -->
+            <div class="input-row flex flex-col sm:flex-row gap-4 mb-4 items-center sm:items-end">
+                <div class="status-indicator w-8 h-8 bg-gray-700 rounded-full flex-shrink-0 transition-colors duration-300 sm:mb-5 shadow-inner"></div>
+                <div class="flex-1 input-group transition duration-300">
+                    <label class="input-label block text-center text-4xl font-semibold text-yellow-400 mb-2 transition duration-300">Vi</label>
+                    <div class="relative">
+                        <input type="number" step="5" class="input-field w-full p-4 pr-16 text-4xl text-center border rounded-xl focus:outline-none focus:ring-2 bg-yellow-100 text-gray-900 border-gray-300 focus:ring-yellow-500 focus:border-yellow-500" placeholder="0">
+                        <button type="button" class="speech-to-text-btn absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-yellow-400 focus:outline-none">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H7v1h6v-1h-2v-2.07z"></path></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 input-group transition duration-300">
-                    <label class="input-label block text-left text-sm font-medium text-gray-700 mb-1 transition duration-300">Ô nhập liệu 4</label>
-                    <input type="number" class="input-field w-full p-3 border border-gray-300 rounded-xl bg-gray-200 text-gray-500 transition duration-300" placeholder="Giá trị tự động" readonly>
+                    <label class="input-label block text-center text-4xl font-semibold text-yellow-400 mb-2 transition duration-300">Phú</label>
+                    <div class="relative">
+                        <input type="number" step="5" class="input-field w-full p-4 pr-16 text-4xl text-center border rounded-xl focus:outline-none focus:ring-2 bg-yellow-100 text-gray-900 border-gray-300 focus:ring-yellow-500 focus:border-yellow-500" placeholder="0">
+                        <button type="button" class="speech-to-text-btn absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-yellow-400 focus:outline-none">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3> 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H7v1h6v-1h-2v-2.07z"></path></svg>
+                        </button>
+                    </div>
                 </div>
-            </form>
+                <div class="flex-1 input-group transition duration-300">
+                    <label class="input-label block text-center text-4xl font-semibold text-yellow-400 mb-2 transition duration-300">Uyên</label>
+                    <input type="number" class="input-field w-full p-4 text-4xl text-center border rounded-xl focus:outline-none bg-yellow-100 text-gray-900 border-gray-300" placeholder="0" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bảng điều khiển Admin -->
+        <div id="adminControls" class="hidden mt-8 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+             <h3 class="text-lg font-bold text-yellow-400 mb-4">Bảng Điều Khiển Admin</h3>
+             <button id="clearHistoryButton" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+                Xoá Toàn Bộ Lịch Sử
+             </button>
         </div>
 
-        <!-- Nút thêm hàng mới -->
-        <div class="mt-4">
-            <button type="button" id="addRowButton" class="w-full py-3 px-6 bg-green-600 text-white font-semibold rounded-xl shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">
-                Thêm hàng mới
-            </button>
-        </div>
 
-        <!-- Vùng hiển thị kết quả -->
-        <div id="result" class="mt-8 p-6 bg-slate-50 rounded-xl border border-dashed border-gray-300 hidden text-left shadow-inner">
-            <h2 class="text-xl font-bold mb-3 text-gray-800">Kết quả:</h2>
-            <p class="text-gray-700" id="resultText"></p>
+        <!-- Khu vực hiển thị lịch sử dạng bảng -->
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold text-yellow-400 mb-4 uppercase tracking-wider">LỊCH SỬ VÁN ĐẤU</h2>
+            <div class="max-h-60 overflow-y-auto bg-black/30 rounded-lg p-1 border border-yellow-500/20">
+                <table class="w-full text-3xl">
+                    <thead class="text-yellow-300 uppercase bg-yellow-800/20 sticky top-0 backdrop-blur-sm">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 w-24 text-center">Ván</th>
+                            <th scope="col" class="px-6 py-4 text-center">Vi</th>
+                            <th scope="col" class="px-6 py-4 text-center">Phú</th>
+                            <th scope="col" class="px-6 py-4 text-center">Uyên</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- Các hàng lịch sử sẽ được chèn vào đây bởi JavaScript -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        const { createClient } = supabase;
+
+        // App Globals
+        const startupModal = document.getElementById('startupModal');
+        const startButton = document.getElementById('startButton');
         const inputRowsContainer = document.getElementById('inputRowsContainer');
-        const addRowButton = document.getElementById('addRowButton');
-        const submitButton = document.getElementById('submitButton');
-        const resultDiv = document.getElementById('result');
-        const resultText = document.getElementById('resultText');
-        const MAX_ROWS = 15; // Đặt giới hạn tối đa 15 hàng
+        let vietnameseVoice = null;
+        let audioCtx = null;
+        let recognition;
+        let activeInput = null;
+        let activeMicButton = null;
 
-        // Hàm để xử lý logic tính toán cho một hàng
-        function setupRowLogic(row) {
-            const inputs = row.querySelectorAll('input[type="number"]');
+        // Admin Globals
+        const adminButton = document.getElementById('adminButton');
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const loginError = document.getElementById('loginError');
+        const adminControls = document.getElementById('adminControls');
+        const clearHistoryButton = document.getElementById('clearHistoryButton');
+        const rlsErrorModal = document.getElementById('rlsErrorModal');
+        const closeRlsErrorModal = document.getElementById('closeRlsErrorModal');
+        const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+        const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+        const cancelDeleteButton = document.getElementById('cancelDeleteButton');
 
-            inputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    if (input.value === '') {
-                        return;
-                    }
 
-                    let filledCount = 0;
-                    let sum = 0;
-                    let lastEmptyInput = null;
+        // --- SUPABASE INTEGRATION ---
+        let supabaseClient;
+        // QUAN TRỌNG: Hãy thay thế các giá trị dưới đây bằng thông tin từ Project Supabase của bạn.
+        // Hướng dẫn: Vào Project Settings -> API
+        const supabaseUrl = 'https://ztvdxwndvfnftzcnddhh.supabase.co'; // <-- DÁN PROJECT URL CỦA BẠN VÀO ĐÂY
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0dmR4d25kdmZuZnR6Y25kZGhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTI1MjAsImV4cCI6MjA3MTc4ODUyMH0.VMPnrKLzhnWGmGfxC1So3Fe7yvt4thcs4Sa_asuLYH8'; // <-- DÁN ANON KEY CỦA BẠN VÀO ĐÂY
 
-                    inputs.forEach(item => {
-                        const value = parseFloat(item.value);
-                        if (!isNaN(value)) {
-                            sum += value;
-                            filledCount++;
-                        } else if (item.value === '' && lastEmptyInput === null) {
-                            lastEmptyInput = item;
-                        }
-                    });
-
-                    if (filledCount === 3 && lastEmptyInput) {
-                        const remainingValue = -sum;
-                        lastEmptyInput.value = remainingValue;
-                    }
-                });
-            });
-        }
-
-        // Tạo logic cho hàng ban đầu
-        const initialRow = inputRowsContainer.querySelector('.input-row');
-        setupRowLogic(initialRow);
-
-        // Hàm kiểm tra giới hạn hàng và ẩn/hiện nút
-        function checkRowLimit() {
-            const currentRows = inputRowsContainer.querySelectorAll('.input-row').length;
-            if (currentRows >= MAX_ROWS) {
-                addRowButton.style.display = 'none';
-            } else {
-                addRowButton.style.display = 'block';
+        async function initializeSupabase() {
+            if (!supabaseUrl || !supabaseKey || supabaseUrl === 'YOUR_SUPABASE_URL') {
+                console.error("Supabase URL hoặc Key chưa được cấu hình. Vui lòng cập nhật trong code.");
+                return;
+            }
+            try {
+                supabaseClient = createClient(supabaseUrl, supabaseKey);
+                console.log("Supabase initialized.");
+                setupSupabaseListener(); 
+            } catch (error) {
+                console.error("Supabase initialization failed:", error);
             }
         }
 
-        // Lắng nghe sự kiện click vào nút "Thêm hàng mới"
-        addRowButton.addEventListener('click', () => {
-            const newRow = initialRow.cloneNode(true);
+        async function fetchAndDisplayHistory() {
+            if (!supabaseClient) return;
+            try {
+                let { data: game_rounds, error } = await supabaseClient
+                    .from('game_rounds')
+                    .select('*');
 
-            const newInputs = newRow.querySelectorAll('input[type="number"]');
-            newInputs.forEach(input => {
-                input.value = '';
-                input.classList.remove('bg-gray-200', 'text-gray-500');
-                if (input.readOnly) {
-                    input.classList.add('bg-gray-200', 'text-gray-500');
+                if (error) {
+                    // Check for both RLS and Invalid API Key errors
+                    if (error.code === '42501') {
+                         rlsErrorModal.classList.remove('hidden');
+                    } else {
+                        // Throw other errors to be caught by the catch block
+                        throw error;
+                    }
+                }
+                
+                if (game_rounds) updateHistoryTable(game_rounds);
+
+            } catch(error) {
+                console.error('Lỗi khi tải lịch sử:', error);
+                // The hint for invalid key is caught here
+                if (error.message && error.message.includes("Invalid API key")) {
+                    alert("Lỗi: Khóa API của Supabase không hợp lệ. Vui lòng kiểm tra lại trong code.");
+                }
+            }
+        }
+
+        function setupSupabaseListener() {
+            if (!supabaseClient) return;
+            fetchAndDisplayHistory();
+            const channel = supabaseClient.channel('public:game_rounds')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rounds' }, payload => {
+                    console.log('Phát hiện thay đổi!', payload);
+                    fetchAndDisplayHistory();
+                })
+                .subscribe();
+        }
+
+        function updateHistoryTable(rounds) {
+            const tableBody = document.getElementById('historyTableBody');
+            tableBody.innerHTML = ''; 
+
+            if (!rounds || rounds.length === 0) return;
+            
+            const sortedHistory = [...rounds].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            sortedHistory.forEach((round, index) => {
+                const viValue = round.vi ?? '0';
+                const phuValue = round.phu ?? '0';
+                const uyenValue = round.uyen ?? '0';
+
+                const tableRow = document.createElement('tr');
+                tableRow.className = 'bg-gray-900/50 border-b border-gray-700 hover:bg-gray-800/50';
+                tableRow.innerHTML = `
+                    <td class="px-6 py-4 text-center font-medium text-gray-200">${sortedHistory.length - index}</td>
+                    <td class="px-6 py-4 text-center ${parseFloat(viValue) < 0 ? 'text-red-500 font-bold' : 'text-gray-200'}">${viValue}</td>
+                    <td class="px-6 py-4 text-center ${parseFloat(phuValue) < 0 ? 'text-red-500 font-bold' : 'text-gray-200'}">${phuValue}</td>
+                    <td class="px-6 py-4 text-center font-bold ${parseFloat(uyenValue) < 0 ? 'text-red-500' : 'text-gray-200'}">${uyenValue}</td>
+                `;
+                tableBody.appendChild(tableRow);
+            });
+        }
+
+        async function saveRoundToSupabase(vi, phu, uyen) {
+            if (!supabaseClient) {
+                console.error("Supabase chưa được khởi tạo.");
+                return;
+            }
+            try {
+                const { error } = await supabaseClient
+                    .from('game_rounds')
+                    .insert([{ vi: vi, phu: phu, uyen: uyen }]);
+                if (error) throw error;
+            } catch (error) {
+                console.error("Lỗi khi ghi dữ liệu vào Supabase: ", error);
+                if (error.code === '42501') {
+                    rlsErrorModal.classList.remove('hidden');
+                }
+            }
+        }
+        
+        // --- ADMIN FUNCTIONS ---
+        async function clearHistory() {
+            if (!supabaseClient) {
+                console.error("Supabase chưa được khởi tạo.");
+                return;
+            }
+            try {
+                const { error } = await supabaseClient
+                    .from('game_rounds')
+                    .delete()
+                    .gt('id', -1); // Xóa tất cả các hàng
+
+                if (error) throw error;
+                console.log("Lịch sử đã được xóa thành công.");
+            } catch (error) {
+                 console.error("Lỗi khi xóa lịch sử: ", error);
+                 if (error.code === '42501') {
+                    rlsErrorModal.classList.remove('hidden');
+                }
+            }
+        }
+
+        function setupAdminControls() {
+            adminButton.addEventListener('click', () => {
+                adminLoginModal.classList.remove('hidden');
+            });
+
+            closeLoginModal.addEventListener('click', () => {
+                adminLoginModal.classList.add('hidden');
+                loginError.textContent = '';
+            });
+            
+            closeRlsErrorModal.addEventListener('click', () => {
+                rlsErrorModal.classList.add('hidden');
+            });
+
+            adminLoginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = e.target.elements.username.value;
+                const password = e.target.elements.password.value;
+
+                if (username === 'admin' && password === 'admin') {
+                    adminLoginModal.classList.add('hidden');
+                    adminControls.classList.remove('hidden');
+                    adminButton.classList.add('hidden');
+                    loginError.textContent = '';
+                    e.target.reset();
+                } else {
+                    loginError.textContent = 'Tên người dùng hoặc mật khẩu không đúng.';
                 }
             });
 
-            setupRowLogic(newRow);
-            inputRowsContainer.appendChild(newRow);
-            checkRowLimit();
-        });
-
-        // Lắng nghe sự kiện click vào nút "Gửi"
-        submitButton.addEventListener('click', () => {
-            let allResults = '';
-            const allRows = inputRowsContainer.querySelectorAll('.input-row');
-            
-            allRows.forEach((row, index) => {
-                const inputs = row.querySelectorAll('input[type="number"]');
-                const values = Array.from(inputs).map(input => input.value);
-                
-                allResults += `
-                    <p class="font-bold mt-4">Hàng ${index + 1}:</p>
-                    <p><strong>Ô 1:</strong> ${values[0]}</p>
-                    <p><strong>Ô 2:</strong> ${values[1]}</p>
-                    <p><strong>Ô 3:</strong> ${values[2]}</p>
-                    <p><strong>Ô 4:</strong> ${values[3]}</p>
-                `;
+            clearHistoryButton.addEventListener('click', () => {
+                deleteConfirmModal.classList.remove('hidden');
             });
             
-            resultText.innerHTML = allResults;
-            resultDiv.classList.remove('hidden');
+            cancelDeleteButton.addEventListener('click', () => {
+                deleteConfirmModal.classList.add('hidden');
+            });
+            
+            confirmDeleteButton.addEventListener('click', () => {
+                clearHistory();
+                deleteConfirmModal.classList.add('hidden');
+            });
+        }
+
+
+        // --- SPEECH & AUDIO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            startButton.addEventListener('click', () => {
+                const dummyUtterance = new SpeechSynthesisUtterance(' ');
+                dummyUtterance.volume = 0;
+                window.speechSynthesis.speak(dummyUtterance);
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+                loadVoices();
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                startupModal.style.display = 'none';
+                initializeSupabase();
+            }, { once: true });
+
+            const initialRows = document.querySelectorAll('.input-row');
+            initialRows.forEach(row => setupRowLogic(row));
+            setupAdminControls(); // Khởi tạo các chức năng admin
         });
 
-        // Kiểm tra giới hạn hàng khi trang tải lần đầu
-        checkRowLimit();
-    </script>
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            vietnameseVoice = voices.find(voice => voice.lang === 'vi-VN');
+            if (vietnameseVoice) console.log('Đã tìm thấy và tải giọng đọc tiếng Việt.');
+            else if (voices.length > 0) console.warn('Không tìm thấy giọng đọc tiếng Việt chuyên dụng.');
+        }
 
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'vi-VN';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.onstart = () => { if (activeMicButton) activeMicButton.classList.add('recording'); };
+            recognition.onend = () => { if (activeMicButton) activeMicButton.classList.remove('recording'); activeInput = null; activeMicButton = null; };
+            recognition.onerror = (event) => { console.error('Lỗi nhận dạng giọng nói:', event.error); if (activeMicButton) activeMicButton.classList.remove('recording');};
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                if (activeInput) {
+                    const number = parseVietnameseNumber(transcript);
+                    if (number !== null) {
+                        activeInput.value = number;
+                        activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        activeInput.dispatchEvent(new Event('blur', { bubbles: true }));
+                    } else {
+                        console.warn(`Không thể chuyển đổi "${transcript}" thành số.`);
+                    }
+                }
+            };
+        } else {
+            console.warn('API Nhận dạng Giọng nói không được hỗ trợ trên trình duyệt này.');
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function parseVietnameseNumber(text) {
+            text = text.toLowerCase().trim().replace(/,/g, '');
+            const numericMatch = text.match(/^-?\d+/);
+            if (numericMatch) return parseInt(numericMatch[0], 10);
+            let isNegative = false;
+            if (text.startsWith('âm')) { isNegative = true; text = text.substring(3).trim(); }
+            text = text.replace(/ lăm/g, ' năm').replace(/ mốt/g, ' một').replace(/ ngàn/g, ' nghìn').replace(/ linh /g, ' ').replace(/ tư/g, ' bốn');
+            const numberWords = {'không': 0, 'một': 1, 'hai': 2, 'ba': 3, 'bốn': 4, 'năm': 5, 'sáu': 6, 'bảy': 7, 'tám': 8, 'chín': 9};
+            const parts = text.split(/\s+/);
+            let total = 0, currentNumber = 0;
+            for (const part of parts) {
+                if (numberWords.hasOwnProperty(part)) { currentNumber += numberWords[part]; } 
+                else if (part === 'mươi') { currentNumber = (currentNumber === 0 ? 1 : currentNumber) * 10; } 
+                else if (part === 'mười') { currentNumber += 10; } 
+                else if (part === 'trăm') { currentNumber = (currentNumber === 0 ? 1 : currentNumber) * 100; } 
+                else if (part === 'nghìn') { currentNumber = (currentNumber === 0 ? 1 : currentNumber) * 1000; total += currentNumber; currentNumber = 0;}
+            }
+            total += currentNumber;
+            if (total === 0 && !text.includes('không') && text !== '0') return null;
+            return isNegative ? -total : total;
+        }
+
+        function setActiveRow(activeRow) {
+            document.querySelectorAll('.input-row').forEach(row => {
+                const inputsInRow = row.querySelectorAll('.input-field');
+                const indicator = row.querySelector('.status-indicator');
+                if (row === activeRow) {
+                    inputsInRow.forEach(inp => { inp.classList.remove('bg-yellow-100'); inp.classList.add('bg-green-100'); });
+                    if (row.dataset.completed !== 'true') { indicator.classList.remove('bg-gray-700'); indicator.classList.add('bg-yellow-500'); }
+                } else {
+                    inputsInRow.forEach(inp => { inp.classList.remove('bg-green-100'); inp.classList.add('bg-yellow-100'); });
+                     if (row.dataset.completed !== 'true') { indicator.classList.remove('bg-yellow-500'); indicator.classList.add('bg-gray-700');}
+                }
+            });
+        }
+        
+        function getPreviousScores() {
+            const tableBody = document.getElementById('historyTableBody');
+            if (tableBody.rows.length === 0) return { vi: 0, phu: 0, uyen: 0 };
+            const cells = tableBody.rows[0].cells;
+            return { vi: parseFloat(cells[1].textContent || '0'), phu: parseFloat(cells[2].textContent || '0'), uyen: parseFloat(cells[3].textContent || '0') };
+        }
+
+        function playSuccessBeep(callback) {
+            if (!audioCtx || audioCtx.state === 'suspended') { if(audioCtx) audioCtx.resume(); }
+            if (!audioCtx) { if (callback) callback(); return; }
+            const now = audioCtx.currentTime, gainNode = audioCtx.createGain(), duration = 2.5, fundamental = 440, partials = [1, 2, 3.01, 4.2, 5.44, 6.79];
+            gainNode.connect(audioCtx.destination); gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+            let lastOsc;
+            partials.forEach((partial, index) => {
+                const osc = audioCtx.createOscillator(), partialGain = audioCtx.createGain();
+                osc.connect(partialGain); partialGain.connect(gainNode); osc.type = 'sine';
+                osc.frequency.setValueAtTime(fundamental * partial, now); partialGain.gain.setValueAtTime(1 / (index + 1.5), now); 
+                osc.start(now); osc.stop(now + duration); lastOsc = osc;
+            });
+            if (callback) lastOsc.onended = callback;
+        }
+
+        function setupRowLogic(row) {
+            const [viPlayerInput, phuPlayerInput] = row.querySelectorAll('input[type="number"]:not([readonly])');
+            const uyenPlayerInput = row.querySelector('input[readonly]');
+            
+            row.querySelectorAll('input[type="number"]:not([readonly])').forEach(input => input.addEventListener('focus', () => setActiveRow(row)));
+            
+            row.addEventListener('focusout', (e) => {
+                if (!row.contains(e.relatedTarget)) {
+                    const lastBlurredInput = e.target;
+                    if (lastBlurredInput.matches('.input-field')) {
+                        const currentValue = parseFloat(lastBlurredInput.value);
+                        if (!isNaN(currentValue)) {
+                            const roundedValue = Math.round(currentValue / 5) * 5;
+                            if (currentValue !== roundedValue) { lastBlurredInput.value = roundedValue; lastBlurredInput.dispatchEvent(new Event('input', { bubbles: true })); }
+                        } else {
+                            lastBlurredInput.value = ''; lastBlurredInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+
+                    if (viPlayerInput.value !== '' && phuPlayerInput.value !== '') {
+                        document.querySelectorAll('.input-row').forEach(otherRow => {
+                            if (otherRow !== row) {
+                                const otherIndicator = otherRow.querySelector('.status-indicator');
+                                otherIndicator.classList.remove('bg-emerald-500', 'flex', 'items-center', 'justify-center');
+                                otherIndicator.classList.add('bg-gray-700'); otherIndicator.innerHTML = ''; otherRow.dataset.completed = 'false';
+                            }
+                        });
+                        const indicator = row.querySelector('.status-indicator');
+                        indicator.classList.remove('bg-gray-700', 'bg-yellow-500');
+                        indicator.classList.add('bg-emerald-500', 'flex', 'items-center', 'justify-center');
+                        indicator.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+                        row.dataset.completed = 'true';
+                        
+                        const viValue = viPlayerInput.value || '0', phuValue = phuPlayerInput.value || '0', uyenValue = uyenPlayerInput.value || '0';
+                        const nextVan = document.getElementById('historyTableBody').rows.length + 1;
+                        const formatForSpeech = (num) => num.startsWith('-') ? `âm ${num.substring(1)}` : num;
+                        let summaryText = `Ván ${nextVan}, Vi ${formatForSpeech(viValue)}, Phú ${formatForSpeech(phuValue)}, Uyên ${formatForSpeech(uyenValue)}`;
+                        const previousScores = getPreviousScores(), returnedPlayers = [];
+                        if (previousScores.vi < 0 && parseFloat(viValue) >= 0) returnedPlayers.push('Vi');
+                        if (previousScores.phu < 0 && parseFloat(phuValue) >= 0) returnedPlayers.push('Phú');
+                        if (previousScores.uyen < 0 && parseFloat(uyenValue) >= 0) returnedPlayers.push('Uyên');
+                        if (returnedPlayers.length > 0) {
+                            let announcementText = (returnedPlayers.length === 1) ? returnedPlayers[0] : `${returnedPlayers.slice(0, -1).join(', ')} và ${returnedPlayers.slice(-1)}`;
+                            summaryText += `. Chúc mừng ${announcementText} đã thắng lớn ha ha`;
+                        }
+
+                        playSuccessBeep(() => {
+                            window.speechSynthesis.cancel();
+                            const utterance = new SpeechSynthesisUtterance(summaryText);
+                            utterance.lang = 'vi-VN'; utterance.rate = 1.1; if (vietnameseVoice) utterance.voice = vietnameseVoice;
+                            window.speechSynthesis.speak(utterance);
+                        });
+                        
+                        saveRoundToSupabase(parseFloat(viValue), parseFloat(phuValue), parseFloat(uyenValue));
+
+                        viPlayerInput.value = '';
+                        phuPlayerInput.value = '';
+                        uyenPlayerInput.value = '';
+                        updateInputStyle(viPlayerInput);
+                        updateInputStyle(phuPlayerInput);
+                        updateInputStyle(uyenPlayerInput);
+
+                    } else {
+                         const indicator = row.querySelector('.status-indicator');
+                         indicator.classList.remove('bg-emerald-500', 'bg-yellow-500'); indicator.classList.add('bg-gray-700');
+                         row.dataset.completed = 'false';
+                    }
+                }
+            });
+
+            if (SpeechRecognition) {
+                row.querySelectorAll('.speech-to-text-btn').forEach(btn => {
+                    const associatedInput = btn.closest('.relative').querySelector('input');
+                    btn.addEventListener('click', () => {
+                        if (activeMicButton === btn) { recognition.stop(); return; }
+                        if (activeMicButton) recognition.stop();
+                        activeInput = associatedInput; activeMicButton = btn; recognition.start();
+                    });
+                });
+            } else {
+                row.querySelectorAll('.speech-to-text-btn').forEach(btn => btn.style.display = 'none');
+            }
+
+            const updateInputStyle = (input) => {
+                if (!input) return;
+                const value = parseFloat(input.value);
+                input.classList.toggle('text-red-500', !isNaN(value) && value < 0);
+                input.classList.toggle('font-bold', !isNaN(value) && value < 0);
+            };
+
+            const calculateUyen = () => {
+                const viValue = parseFloat(viPlayerInput.value), phuValue = parseFloat(phuPlayerInput.value);
+                uyenPlayerInput.value = (!isNaN(viValue) && !isNaN(phuValue)) ? -(viValue + phuValue) : '';
+                updateInputStyle(uyenPlayerInput);
+            };
+
+            viPlayerInput.addEventListener('input', () => { updateInputStyle(viPlayerInput); calculateUyen(); });
+            phuPlayerInput.addEventListener('input', () => { updateInputStyle(phuPlayerInput); calculateUyen(); });
+        }
+    </script>
 </body>
 </html>
+
