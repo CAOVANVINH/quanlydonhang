@@ -126,24 +126,19 @@
 
     <!-- Modal Lỗi Bảo Mật Supabase (RLS) -->
     <div id="rlsErrorModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm hidden">
-        <div class="bg-red-900 border-2 border-red-500/50 p-8 rounded-2xl shadow-xl text-left mx-4 w-full max-w-lg relative">
+        <div class="bg-red-900 border-2 border-red-500/50 p-8 rounded-2xl shadow-xl text-left mx-4 w-full max-w-2xl relative">
             <button id="closeRlsErrorModal" class="absolute top-2 right-3 text-white text-2xl font-bold">&times;</button>
-            <h2 class="text-2xl font-bold mb-4 text-center casino-title text-yellow-300">Lỗi Cấu Hình Bảo Mật</h2>
+            <h2 class="text-2xl font-bold mb-4 text-center casino-title text-yellow-300">Lỗi Cấu Hình Bảo Mật Supabase</h2>
             <p class="text-gray-200 mb-4">
-                Ứng dụng không thể lưu hoặc xoá dữ liệu. Đây là lỗi cài đặt trên Supabase, không phải lỗi code.
+                Ứng dụng không thể thực hiện thao tác với cơ sở dữ liệu. Đây là lỗi cài đặt trên Supabase, không phải lỗi code.
             </p>
             <p class="text-gray-200 mb-4 font-bold">
-                Vui lòng làm theo các bước sau trong trang quản trị Supabase của bạn:
+                Vui lòng vào trang quản trị Supabase và đảm bảo các Chính sách (Policies) sau đã được tạo:
             </p>
-            <ol class="list-decimal list-inside text-gray-200 space-y-2">
-                <li>Đăng nhập vào <strong>Supabase</strong> và vào Project của bạn.</li>
-                <li>Ở menu bên trái, chọn <strong>Authentication</strong> (biểu tượng ổ khóa).</li>
-                <li>Chọn tab <strong>Policies</strong>.</li>
-                <li>Tìm bảng <strong>game_rounds</strong> và tạo <strong>New Policy</strong>.</li>
-                <li>Chọn mẫu <strong>"Enable insert access for all users"</strong> để cho phép LƯU.</li>
-                <li>Tạo một Policy mới nữa và chọn mẫu <strong>"Enable read access for all users"</strong> để cho phép XEM LỊCH SỬ.</li>
-                <li>(Nếu cần) Tạo Policy thứ ba và chọn mẫu <strong>"Enable delete access for all users"</strong> để cho phép Nút XÓA của Admin hoạt động.</li>
-            </ol>
+            <ul class="list-disc list-inside text-gray-200 space-y-2">
+                <li>Bảng <strong>game_rounds</strong>: Cần policy cho phép <strong>INSERT</strong>, <strong>SELECT</strong>, và <strong>DELETE</strong>.</li>
+                <li>Bảng <strong>admin_settings</strong>: Cần policy cho phép <strong>SELECT</strong> và <strong>UPDATE/INSERT</strong>.</li>
+            </ul>
         </div>
     </div>
 
@@ -158,8 +153,7 @@
             </div>
         </div>
     </div>
-
-
+    
     <!-- Container riêng cho hình nền và lớp phủ -->
     <div class="fixed inset-0 -z-10 macau-bg">
         <div class="absolute inset-0 bg-black/50"></div>
@@ -243,9 +237,16 @@
         <!-- Bảng điều khiển Admin -->
         <div id="adminControls" class="hidden mt-8 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
              <h3 class="text-lg font-bold text-yellow-400 mb-4">Bảng Điều Khiển Admin</h3>
-             <button id="clearHistoryButton" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
-                Xoá Toàn Bộ Lịch Sử
-             </button>
+             <div class="flex flex-col sm:flex-row items-center gap-4 flex-wrap">
+                 <button id="clearHistoryButton" class="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+                    Xoá Lịch Sử
+                 </button>
+                 <div class="flex items-center gap-2">
+                    <label for="historyLimitInput" class="text-sm text-gray-300 whitespace-nowrap">Số ván hiển thị:</label>
+                    <input type="number" id="historyLimitInput" min="1" class="bg-gray-800 text-white p-1 rounded-md w-20 text-center border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    <button id="saveHistoryLimitButton" class="bg-blue-700 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg text-xs">Lưu</button>
+                 </div>
+             </div>
         </div>
 
 
@@ -257,6 +258,7 @@
                     <thead class="text-yellow-300 uppercase bg-yellow-800/20 sticky top-0 backdrop-blur-sm">
                         <tr>
                             <th scope="col" class="px-6 py-4 w-24 text-center">Ván</th>
+                            <th scope="col" class="px-6 py-4 text-center text-base">Thời Gian</th>
                             <th scope="col" class="px-6 py-4 text-center">Vi</th>
                             <th scope="col" class="px-6 py-4 text-center">Phú</th>
                             <th scope="col" class="px-6 py-4 text-center">Uyên</th>
@@ -296,26 +298,73 @@
         const deleteConfirmModal = document.getElementById('deleteConfirmModal');
         const confirmDeleteButton = document.getElementById('confirmDeleteButton');
         const cancelDeleteButton = document.getElementById('cancelDeleteButton');
+        const historyLimitInput = document.getElementById('historyLimitInput');
+        const saveHistoryLimitButton = document.getElementById('saveHistoryLimitButton');
 
-
-        // --- SUPABASE INTEGRATION ---
+        // --- SUPABASE & DATA ---
         let supabaseClient;
-        // QUAN TRỌNG: Hãy thay thế các giá trị dưới đây bằng thông tin từ Project Supabase của bạn.
-        // Hướng dẫn: Vào Project Settings -> API
+        let historyLimit = 50; // Default value, will be overwritten from Supabase
+        
         const supabaseUrl = 'https://ztvdxwndvfnftzcnddhh.supabase.co'; // <-- DÁN PROJECT URL CỦA BẠN VÀO ĐÂY
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0dmR4d25kdmZuZnR6Y25kZGhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTI1MjAsImV4cCI6MjA3MTc4ODUyMH0.VMPnrKLzhnWGmGfxC1So3Fe7yvt4thcs4Sa_asuLYH8'; // <-- DÁN ANON KEY CỦA BẠN VÀO ĐÂY
 
         async function initializeSupabase() {
-            if (!supabaseUrl || !supabaseKey || supabaseUrl === 'YOUR_SUPABASE_URL') {
+            if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('YOUR_SUPABASE_URL')) {
                 console.error("Supabase URL hoặc Key chưa được cấu hình. Vui lòng cập nhật trong code.");
+                alert("Lỗi: Supabase URL hoặc Key chưa được cấu hình. Vui lòng kiểm tra lại trong code.");
                 return;
             }
             try {
                 supabaseClient = createClient(supabaseUrl, supabaseKey);
                 console.log("Supabase initialized.");
+                await fetchHistoryLimit(); // Fetch setting before fetching history
                 setupSupabaseListener(); 
             } catch (error) {
                 console.error("Supabase initialization failed:", error);
+            }
+        }
+
+        async function fetchHistoryLimit() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('admin_settings')
+                    .select('setting_value')
+                    .eq('setting_name', 'historyLimit')
+                    .single();
+
+                if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+                    throw error;
+                }
+                if (data) {
+                    historyLimit = parseInt(data.setting_value);
+                }
+                historyLimitInput.value = historyLimit; // Update input field with value from DB or default
+            } catch (error) {
+                console.error("Lỗi khi tải thiết lập số ván hiển thị:", error);
+                if (error.code === '42P01') {
+                    alert("Lỗi: Bảng 'admin_settings' không tồn tại. Vui lòng tạo bảng này trong Supabase.");
+                }
+            }
+        }
+
+        async function saveHistoryLimitToSupabase(newLimit) {
+            if (!supabaseClient) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('admin_settings')
+                    .upsert({ setting_name: 'historyLimit', setting_value: newLimit });
+
+                if (error) throw error;
+                return true; // Indicate success
+            } catch (error) {
+                console.error("Lỗi khi lưu thiết lập số ván hiển thị:", error);
+                if (error.code === '42501') {
+                    rlsErrorModal.classList.remove('hidden');
+                } else {
+                    alert("Đã xảy ra lỗi khi lưu thiết lập. Vui lòng xem console.");
+                }
+                return false; // Indicate failure
             }
         }
 
@@ -327,11 +376,9 @@
                     .select('*');
 
                 if (error) {
-                    // Check for both RLS and Invalid API Key errors
                     if (error.code === '42501') {
                          rlsErrorModal.classList.remove('hidden');
                     } else {
-                        // Throw other errors to be caught by the catch block
                         throw error;
                     }
                 }
@@ -340,7 +387,6 @@
 
             } catch(error) {
                 console.error('Lỗi khi tải lịch sử:', error);
-                // The hint for invalid key is caught here
                 if (error.message && error.message.includes("Invalid API key")) {
                     alert("Lỗi: Khóa API của Supabase không hợp lệ. Vui lòng kiểm tra lại trong code.");
                 }
@@ -365,16 +411,20 @@
             if (!rounds || rounds.length === 0) return;
             
             const sortedHistory = [...rounds].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const displayHistory = sortedHistory.slice(0, historyLimit);
 
-            sortedHistory.forEach((round, index) => {
+            displayHistory.forEach((round) => {
                 const viValue = round.vi ?? '0';
                 const phuValue = round.phu ?? '0';
                 const uyenValue = round.uyen ?? '0';
+                const formattedTime = formatDateTime(new Date(round.created_at));
 
                 const tableRow = document.createElement('tr');
                 tableRow.className = 'bg-gray-900/50 border-b border-gray-700 hover:bg-gray-800/50';
+                const roundNumber = sortedHistory.length - (sortedHistory.indexOf(round));
                 tableRow.innerHTML = `
-                    <td class="px-6 py-4 text-center font-medium text-gray-200">${sortedHistory.length - index}</td>
+                    <td class="px-6 py-4 text-center font-medium text-gray-200">${roundNumber}</td>
+                    <td class="px-6 py-4 text-center text-base text-gray-400 whitespace-nowrap">${formattedTime}</td>
                     <td class="px-6 py-4 text-center ${parseFloat(viValue) < 0 ? 'text-red-500 font-bold' : 'text-gray-200'}">${viValue}</td>
                     <td class="px-6 py-4 text-center ${parseFloat(phuValue) < 0 ? 'text-red-500 font-bold' : 'text-gray-200'}">${phuValue}</td>
                     <td class="px-6 py-4 text-center font-bold ${parseFloat(uyenValue) < 0 ? 'text-red-500' : 'text-gray-200'}">${uyenValue}</td>
@@ -391,7 +441,7 @@
             try {
                 const { error } = await supabaseClient
                     .from('game_rounds')
-                    .insert([{ vi: vi, phu: phu, uyen: uyen }]);
+                    .insert([{ vi, phu, uyen }]);
                 if (error) throw error;
             } catch (error) {
                 console.error("Lỗi khi ghi dữ liệu vào Supabase: ", error);
@@ -403,15 +453,12 @@
         
         // --- ADMIN FUNCTIONS ---
         async function clearHistory() {
-            if (!supabaseClient) {
-                console.error("Supabase chưa được khởi tạo.");
-                return;
-            }
+            if (!supabaseClient) return;
             try {
                 const { error } = await supabaseClient
                     .from('game_rounds')
                     .delete()
-                    .gt('id', -1); // Xóa tất cả các hàng
+                    .gt('id', -1);
 
                 if (error) throw error;
                 console.log("Lịch sử đã được xóa thành công.");
@@ -422,27 +469,16 @@
                 }
             }
         }
-
+        
         function setupAdminControls() {
-            adminButton.addEventListener('click', () => {
-                adminLoginModal.classList.remove('hidden');
-            });
-
-            closeLoginModal.addEventListener('click', () => {
-                adminLoginModal.classList.add('hidden');
-                loginError.textContent = '';
-            });
-            
-            closeRlsErrorModal.addEventListener('click', () => {
-                rlsErrorModal.classList.add('hidden');
-            });
+            adminButton.addEventListener('click', () => adminLoginModal.classList.remove('hidden'));
+            closeLoginModal.addEventListener('click', () => adminLoginModal.classList.add('hidden'));
+            closeRlsErrorModal.addEventListener('click', () => rlsErrorModal.classList.add('hidden'));
 
             adminLoginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const username = e.target.elements.username.value;
-                const password = e.target.elements.password.value;
-
-                if (username === 'admin' && password === 'admin') {
+                const { username, password } = e.target.elements;
+                if (username.value === 'admin' && password.value === 'admin') {
                     adminLoginModal.classList.add('hidden');
                     adminControls.classList.remove('hidden');
                     adminButton.classList.add('hidden');
@@ -453,20 +489,36 @@
                 }
             });
 
-            clearHistoryButton.addEventListener('click', () => {
-                deleteConfirmModal.classList.remove('hidden');
-            });
-            
-            cancelDeleteButton.addEventListener('click', () => {
-                deleteConfirmModal.classList.add('hidden');
-            });
-            
+            clearHistoryButton.addEventListener('click', () => deleteConfirmModal.classList.remove('hidden'));
+            cancelDeleteButton.addEventListener('click', () => deleteConfirmModal.classList.add('hidden'));
             confirmDeleteButton.addEventListener('click', () => {
                 clearHistory();
                 deleteConfirmModal.classList.add('hidden');
             });
+            
+            saveHistoryLimitButton.addEventListener('click', async () => {
+                const newLimit = parseInt(historyLimitInput.value);
+                if (!isNaN(newLimit) && newLimit > 0) {
+                    const success = await saveHistoryLimitToSupabase(newLimit);
+                    if (success) {
+                        historyLimit = newLimit;
+                        fetchAndDisplayHistory(); // Refresh the view with the new limit
+                        
+                        // UI Feedback
+                        saveHistoryLimitButton.textContent = 'Đã Lưu!';
+                        saveHistoryLimitButton.classList.replace('bg-blue-700', 'bg-green-600');
+                        saveHistoryLimitButton.classList.replace('hover:bg-blue-600', 'hover:bg-green-500');
+                        setTimeout(() => {
+                            saveHistoryLimitButton.textContent = 'Lưu';
+                            saveHistoryLimitButton.classList.replace('bg-green-600', 'bg-blue-700');
+                            saveHistoryLimitButton.classList.replace('hover:bg-green-500', 'hover:bg-blue-600');
+                        }, 2000);
+                    }
+                } else {
+                    alert('Vui lòng nhập một số hợp lệ lớn hơn 0.');
+                }
+            });
         }
-
 
         // --- SPEECH & AUDIO ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -485,7 +537,7 @@
 
             const initialRows = document.querySelectorAll('.input-row');
             initialRows.forEach(row => setupRowLogic(row));
-            setupAdminControls(); // Khởi tạo các chức năng admin
+            setupAdminControls();
         });
 
         function loadVoices() {
@@ -523,6 +575,20 @@
         }
 
         // --- UTILITY FUNCTIONS ---
+        function formatDateTime(date) {
+            if (!date || isNaN(date)) return 'N/A';
+            
+            // Chuyển đổi sang múi giờ Việt Nam (UTC+7)
+            const vietnamTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+
+            const hours = String(vietnamTime.getUTCHours()).padStart(2, '0');
+            const minutes = String(vietnamTime.getUTCMinutes()).padStart(2, '0');
+            const day = String(vietnamTime.getUTCDate()).padStart(2, '0');
+            const month = String(vietnamTime.getUTCMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+            
+            return `${day}/${month} (${hours}:${minutes})`;
+        }
+
         function parseVietnameseNumber(text) {
             text = text.toLowerCase().trim().replace(/,/g, '');
             const numericMatch = text.match(/^-?\d+/);
@@ -683,4 +749,6 @@
     </script>
 </body>
 </html>
+
+
 
