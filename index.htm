@@ -174,15 +174,21 @@
         function getTargetDayName() {
             // Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
             const nowInVietnam = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+            const currentHour = nowInVietnam.getHours();
             const todayJSIndex = nowInVietnam.getDay(); // 0 = Sunday, 1 = Monday, ...
-
-            // Luôn tính chỉ số của ngày mai
-            const tomorrowJSIndex = (todayJSIndex === 6) ? 0 : todayJSIndex + 1;
+            
+            let targetDayJSIndex;
+            // Nếu giờ hiện tại >= 16:00, hiển thị ngày mai
+            if (currentHour >= 16) {
+                targetDayJSIndex = (todayJSIndex === 6) ? 0 : todayJSIndex + 1;
+            } else { // Ngược lại, hiển thị ngày hiện tại
+                targetDayJSIndex = todayJSIndex;
+            }
 
             // Chuyển đổi chỉ số JavaScript (0-6) sang chỉ số mảng của chúng ta (0-6)
-            const tomorrowScheduleIndex = tomorrowJSIndex === 0 ? 6 : tomorrowJSIndex - 1;
+            const targetScheduleIndex = targetDayJSIndex === 0 ? 6 : targetDayJSIndex - 1;
 
-            return daysOfWeek[tomorrowScheduleIndex];
+            return daysOfWeek[targetScheduleIndex];
         }
 
         function updateDisplay() {
@@ -221,10 +227,10 @@
                 student2Header.textContent = `${student2Name}`;
                 toggleAdminBtn.textContent = 'Xem Toàn Bộ Lịch';
 
-                // Đặt các ô nhập liệu thành chỉ đọc
+                // Đặt các ô nhập liệu về trạng thái chỉnh sửa được
                 allTextareas.forEach(textarea => {
-                    textarea.readOnly = true;
-                    textarea.classList.add('readonly-textarea');
+                    textarea.readOnly = false;
+                    textarea.classList.remove('readonly-textarea');
                 });
             }
         }
@@ -259,6 +265,9 @@
                 
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
+                // Ping Supabase daily to keep the project active
+                await pingSupabase();
+
                 startRealtimeListeners();
                 await fetchInitialData();
                 
@@ -267,6 +276,28 @@
                 showMessage(error.message, 'error');
             } finally {
                 showLoading(false);
+            }
+        }
+        
+        async function pingSupabase() {
+            try {
+                const { data, error } = await supabase.from('settings').select('last_ping').eq('id', 'last_ping_record').single();
+                
+                const now = new Date();
+                let lastPingDate = null;
+                if (data && data.last_ping) {
+                    lastPingDate = new Date(data.last_ping);
+                }
+
+                // Ping if no record or if it's been more than 24 hours
+                if (!lastPingDate || (now.getTime() - lastPingDate.getTime() > 24 * 60 * 60 * 1000)) {
+                    await supabase.from('settings').upsert({
+                        id: 'last_ping_record',
+                        last_ping: now.toISOString()
+                    }, { onConflict: 'id' });
+                }
+            } catch (error) {
+                console.error("Lỗi khi ping Supabase:", error);
             }
         }
 
@@ -305,11 +336,14 @@
         }
 
         async function saveSchedule(event) {
+            // Kiểm tra xem ô nhập liệu có ở chế độ chỉ đọc không
             if (!supabase || event.target.readOnly) return;
             try {
+                // Lấy dayId từ id của textarea (ví dụ: "schedule-A-ThứHai" -> "ThứHai")
                 const dayId = event.target.id.replace(/schedule-[A|B]-/, '');
                 const isStudentA = event.target.id.includes('schedule-A');
                 
+                // Lưu dữ liệu vào Supabase
                 const { error } = await supabase.from('schedules').upsert({
                     day_id: dayId,
                     [isStudentA ? 'student_a' : 'student_b']: event.target.value
