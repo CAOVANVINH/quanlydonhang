@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thời Khoá Biểu</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+        .schedule-card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            border-radius: 1rem;
+            transition: transform 0.3s ease-in-out;
+        }
+        .schedule-card:hover {
+            transform: translateY(-5px);
+        }
+        .day-header {
+            border-bottom: 2px solid #e2e8f0;
+        }
+        textarea {
+            resize: none;
+            overflow: hidden;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s ease-in-out;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            min-height: 4rem; /* Initial height for better readability */
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: none;
+        }
+        .readonly-textarea {
+            background-color: #e2e8f0;
+            cursor: default;
+            pointer-events: none;
+        }
+    </style>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="flex flex-col items-center p-6 bg-white rounded-lg shadow-xl">
+            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-4 text-gray-700 font-semibold">Đang tải...</p>
+        </div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box" class="message-box"></div>
+
+    <div class="w-full max-w-6xl mx-auto py-8 px-4">
+        <div class="bg-white p-6 md:p-8 rounded-2xl schedule-card mb-6 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Thời Khoá Biểu</h1>
+            <p id="date-display" class="text-gray-500 mb-4"></p>
+            <button id="toggleAdminBtn" class="mt-4 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-300">
+                Xem Toàn Bộ Lịch
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Student 1 Schedule -->
+            <div class="bg-white p-6 rounded-2xl schedule-card">
+                <h2 id="student-1-header" class="text-2xl font-bold text-gray-700 mb-4">Học sinh 1</h2>
+                <div id="student-1-schedule" class="space-y-4">
+                    <!-- Day sections will be generated here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Student 2 Schedule -->
+            <div class="bg-white p-6 rounded-2xl schedule-card">
+                <h2 id="student-2-header" class="text-2xl font-bold text-gray-700 mb-4">Học sinh 2</h2>
+                <div id="student-2-schedule" class="space-y-4">
+                    <!-- Day sections will be generated here by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const daysOfWeek = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+        const student1Name = 'Cao Trần Hằng Nga';
+        const student2Name = 'Cao Trần Thảo Huyền';
+
+        const messageBox = document.getElementById('message-box');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const student1Header = document.getElementById('student-1-header');
+        const student2Header = document.getElementById('student-2-header');
+        const student1ScheduleContainer = document.getElementById('student-1-schedule');
+        const student2ScheduleContainer = document.getElementById('student-2-schedule');
+        const dateDisplayElement = document.getElementById('date-display');
+        const toggleAdminBtn = document.getElementById('toggleAdminBtn');
+
+        let isAdminMode = false;
+
+        // IMPORTANT: Use the global variables provided by the environment
+        const SUPABASE_URL = typeof __supabase_url !== 'undefined' ? __supabase_url : 'https://pazpyjdzfyxcttuptfhr.supabase.co';
+        const SUPABASE_ANON_KEY = typeof __supabase_anon_key !== 'undefined' ? __supabase_anon_key : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhenB5amR6Znl4Y3R0dXB0ZmhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNDQ2MjYsImV4cCI6MjA3MjkyMDYyNn0.avHgrXzh4wkUvlpOtyYTJfOSaRYFQY3Hb2PJGgyLl0g';
+        
+        let supabase = null;
+
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            messageBox.className = `message-box p-4 rounded-lg shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            loadingOverlay.style.display = show ? 'flex' : 'none';
+        }
+
+        function generateScheduleContainers() {
+            student1ScheduleContainer.innerHTML = '';
+            student2ScheduleContainer.innerHTML = '';
+            
+            daysOfWeek.forEach((day, index) => {
+                const dayId = day.replace(/\s/g, '');
+                
+                // Student 1
+                const daySection1 = document.createElement('div');
+                daySection1.id = `day-section-A-${dayId}`;
+                daySection1.className = 'day-section';
+                daySection1.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-600 day-header pb-2 mb-2">${day}</h3>
+                    <textarea id="schedule-A-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold"></textarea>
+                `;
+                student1ScheduleContainer.appendChild(daySection1);
+
+                // Student 2
+                const daySection2 = document.createElement('div');
+                daySection2.id = `day-section-B-${dayId}`;
+                daySection2.className = 'day-section';
+                daySection2.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-600 day-header pb-2 mb-2">${day}</h3>
+                    <textarea id="schedule-B-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold"></textarea>
+                `;
+                student2ScheduleContainer.appendChild(daySection2);
+            });
+        }
+        
+        function autoResizeTextareas() {
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.addEventListener('input', () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                });
+            });
+        }
+        
+        function getTargetDayName() {
+            // Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
+            const nowInVietnam = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+            const todayJSIndex = nowInVietnam.getDay(); // 0 = Sunday, 1 = Monday, ...
+
+            // Luôn tính chỉ số của ngày mai
+            const tomorrowJSIndex = (todayJSIndex === 6) ? 0 : todayJSIndex + 1;
+
+            // Chuyển đổi chỉ số JavaScript (0-6) sang chỉ số mảng của chúng ta (0-6)
+            const tomorrowScheduleIndex = tomorrowJSIndex === 0 ? 6 : tomorrowJSIndex - 1;
+
+            return daysOfWeek[tomorrowScheduleIndex];
+        }
+
+        function updateDisplay() {
+            const allTextareas = document.querySelectorAll('textarea');
+            if (isAdminMode) {
+                // Hiển thị tất cả các ngày
+                document.querySelectorAll('.day-section').forEach(section => {
+                    section.style.display = 'block';
+                });
+                // Cập nhật tiêu đề
+                student1Header.textContent = `${student1Name}`;
+                student2Header.textContent = `${student2Name}`;
+                toggleAdminBtn.textContent = 'Ẩn Toàn Bộ Lịch';
+                
+                // Đặt các ô nhập liệu thành chỉ đọc
+                allTextareas.forEach(textarea => {
+                    textarea.readOnly = true;
+                    textarea.classList.add('readonly-textarea');
+                });
+            } else {
+                const targetDayName = getTargetDayName();
+                // Ẩn tất cả các ngày khác
+                document.querySelectorAll('.day-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                // Hiển thị ngày mục tiêu
+                const targetDayId = targetDayName.replace(/\s/g, '');
+                const targetDaySectionA = document.getElementById(`day-section-A-${targetDayId}`);
+                const targetDaySectionB = document.getElementById(`day-section-B-${targetDayId}`);
+                
+                if (targetDaySectionA) targetDaySectionA.style.display = 'block';
+                if (targetDaySectionB) targetDaySectionB.style.display = 'block';
+
+                // Cập nhật tiêu đề để hiển thị tên học sinh và ngày
+                student1Header.textContent = `${student1Name} (${targetDayName})`;
+                student2Header.textContent = `${student2Name} (${targetDayName})`;
+                toggleAdminBtn.textContent = 'Xem Toàn Bộ Lịch';
+
+                // Đặt các ô nhập liệu thành chỉ đọc
+                allTextareas.forEach(textarea => {
+                    textarea.readOnly = true;
+                    textarea.classList.add('readonly-textarea');
+                });
+            }
+        }
+
+        function updateHeaderDate() {
+            const now = new Date();
+            const dateOptions = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                timeZone: 'Asia/Ho_Chi_Minh'
+            };
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Asia/Ho_Chi_Minh'
+            };
+
+            const vietnamDate = now.toLocaleString('vi-VN', dateOptions);
+            const vietnamTime = now.toLocaleString('vi-VN', timeOptions);
+            dateDisplayElement.textContent = `${vietnamDate} (${vietnamTime})`;
+        }
+
+        async function initializeSupabase() {
+            showLoading(true);
+            try {
+                if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                    throw new Error("Vui lòng cung cấp URL và Anon Key của Supabase để tiếp tục.");
+                }
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                startRealtimeListeners();
+                await fetchInitialData();
+                
+            } catch (error) {
+                console.error("Lỗi khi kết nối với Supabase:", error);
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function startRealtimeListeners() {
+            // Lắng nghe tên học sinh
+            supabase.channel('public:settings')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, payload => {
+                    if (payload.new.id === 'student_names') {
+                        updateNamesUI(payload.new);
+                    }
+                })
+                .subscribe();
+
+            // Lắng nghe thời khoá biểu
+            supabase.channel('public:schedules')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, payload => {
+                    if (payload.new) {
+                        renderDay(payload.new.day_id, payload.new);
+                    }
+                })
+                .subscribe();
+
+            // Lắng nghe sự kiện input và tự động lưu
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.addEventListener('input', debounce(saveSchedule, 1000));
+            });
+        }
+        
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        async function saveSchedule(event) {
+            if (!supabase || event.target.readOnly) return;
+            try {
+                const dayId = event.target.id.replace(/schedule-[A|B]-/, '');
+                const isStudentA = event.target.id.includes('schedule-A');
+                
+                const { error } = await supabase.from('schedules').upsert({
+                    day_id: dayId,
+                    [isStudentA ? 'student_a' : 'student_b']: event.target.value
+                }, { onConflict: 'day_id' });
+
+                if (error) throw error;
+                showMessage('Đã lưu thời khoá biểu thành công.');
+            } catch (error) {
+                console.error("Lỗi khi lưu thời khoá biểu:", error);
+                showMessage('Lỗi khi lưu thời khoá biểu.', 'error');
+            }
+        }
+
+        async function fetchInitialData() {
+            // Fetch student names
+            const { data: namesData, error: namesError } = await supabase.from('settings').select('*').eq('id', 'student_names').single();
+            if (!namesError && namesData) {
+                updateNamesUI(namesData);
+            } else {
+                updateNamesUI({ student1_name: student1Name, student2_name: student2Name });
+            }
+
+            // Fetch all schedules
+            const { data: schedulesData, error: schedulesError } = await supabase.from('schedules').select('*');
+            if (!schedulesError && schedulesData) {
+                const scheduleMap = schedulesData.reduce((acc, curr) => {
+                    acc[curr.day_id] = curr;
+                    return acc;
+                }, {});
+                renderAllSchedules(scheduleMap);
+            }
+            // Auto-resize textareas after content is loaded
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+            updateDisplay();
+        }
+
+        function updateNamesUI(names) {
+            student1Header.textContent = names.student1_name || student1Name;
+            student2Header.textContent = names.student2_name || student2Name;
+        }
+
+        function renderAllSchedules(data) {
+            daysOfWeek.forEach(day => {
+                const dayId = day.replace(/\s/g, '');
+                renderDay(dayId, data[dayId] || {});
+            });
+        }
+
+        function renderDay(dayId, schedule) {
+            const studentATextarea = document.getElementById(`schedule-A-${dayId}`);
+            const studentBTextarea = document.getElementById(`schedule-B-${dayId}`);
+            
+            if (studentATextarea) {
+                studentATextarea.value = schedule.student_a || '';
+            }
+            if (studentBTextarea) {
+                studentBTextarea.value = schedule.student_b || '';
+            }
+        }
+
+        toggleAdminBtn.addEventListener('click', () => {
+            isAdminMode = !isAdminMode;
+            updateDisplay();
+        });
+
+        window.addEventListener('load', () => {
+            generateScheduleContainers();
+            autoResizeTextareas();
+            initializeSupabase();
+            updateHeaderDate();
+            setInterval(updateHeaderDate, 1000);
+        });
+    </script>
+</body>
+</html>
