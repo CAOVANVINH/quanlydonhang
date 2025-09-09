@@ -368,16 +368,9 @@
                 day: 'numeric',
                 timeZone: 'Asia/Ho_Chi_Minh'
             };
-            const timeOptions = {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'Asia/Ho_Chi_Minh'
-            };
 
             const vietnamDate = now.toLocaleString('vi-VN', dateOptions);
-            const vietnamTime = now.toLocaleString('vi-VN', timeOptions);
-            dateDisplayElement.textContent = `${vietnamDate} (${vietnamTime})`;
+            dateDisplayElement.textContent = `${vietnamDate}`;
         }
 
         async function initializeSupabase() {
@@ -681,3 +674,4 @@
     </script>
 </body>
 </html>
+
