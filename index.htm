@@ -86,7 +86,17 @@
             <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Thời Khoá Biểu</h1>
             <p id="date-display" class="text-gray-500 mb-4"></p>
             
-            <!-- Day selection buttons removed -->
+            <!-- Day selection buttons and Auto button -->
+            <div id="day-selection-buttons" class="flex flex-wrap justify-center gap-2 mb-4">
+                <button data-day="Tự Động" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Tự Động</button>
+                <button data-day="Thứ Hai" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Thứ Hai</button>
+                <button data-day="Thứ Ba" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Thứ Ba</button>
+                <button data-day="Thứ Tư" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Thứ Tư</button>
+                <button data-day="Thứ Năm" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Thứ Năm</button>
+                <button data-day="Thứ Sáu" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Thứ Sáu</button>
+                <button data-day="Thứ Bảy" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Thứ Bảy</button>
+                <button data-day="Chủ Nhật" class="day-button px-4 py-2 rounded-full text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300">Chủ Nhật</button>
+            </div>
 
             <button id="toggleAdminBtn" class="mt-4 px-6 py-2 bg-blue-500 text-white font-semibold rounded-full hover:bg-blue-600 transition-colors duration-300 transform hover:scale-105">
                 Xem Toàn Bộ Lịch
@@ -125,7 +135,7 @@
         const student2ScheduleContainer = document.getElementById('student-2-schedule');
         const dateDisplayElement = document.getElementById('date-display');
         const toggleAdminBtn = document.getElementById('toggleAdminBtn');
-        const daySelectionButtonsContainer = null; // Update to remove buttons
+        const daySelectionButtonsContainer = document.getElementById('day-selection-buttons');
 
         let isAdminMode = false;
         let selectedDay = null;
@@ -210,6 +220,11 @@
                 // Show all days
                 document.querySelectorAll('.day-section').forEach(section => {
                     section.style.display = 'block';
+                });
+                
+                // Deactivate all day buttons
+                document.querySelectorAll('.day-button').forEach(button => {
+                    button.classList.remove('active');
                 });
                 
                 // Update header and button text
@@ -316,7 +331,6 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, payload => {
                     if (payload.new) {
                         renderDay(payload.new.day_id, payload.new);
-                        autoResizeTextareas(); // Auto-resize on content change
                     }
                 })
                 .subscribe();
@@ -341,10 +355,9 @@
                 renderAllSchedules(scheduleMap);
             }
             
-            // Set initial day view to the current/next day
-            selectedDay = getTargetDayName();
-            updateDisplay();
-            autoResizeTextareas(); // Auto-resize after content is loaded
+            // Set initial view to auto-select the current/next day
+            setInitialView();
+            autoResizeTextareas();
         }
 
         function updateNamesUI(names) {
@@ -369,11 +382,58 @@
             if (studentBTextarea) {
                 studentBTextarea.value = schedule.student_b || '';
             }
+            // Add an input event listener to the textareas to auto-resize
+            studentATextarea.addEventListener('input', autoResizeTextareas);
+            studentBTextarea.addEventListener('input', autoResizeTextareas);
+
+            // Re-run the auto-resize logic after setting the value
+            autoResizeTextareas();
+        }
+
+        function selectDay(dayName) {
+            isAdminMode = false;
+            selectedDay = dayName;
+            updateDisplay();
+
+            // Update active button state
+            document.querySelectorAll('.day-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            const selectedButton = document.querySelector(`[data-day="${dayName}"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+            // Re-run auto-resize after day selection
+            autoResizeTextareas();
+        }
+        
+        function setInitialView() {
+            const autoDayName = getTargetDayName();
+            selectDay(autoDayName);
+            // Also highlight the "Tự Động" button
+            const autoButton = document.querySelector(`[data-day="Tự Động"]`);
+            if (autoButton) {
+                autoButton.classList.add('active');
+            }
         }
 
         toggleAdminBtn.addEventListener('click', () => {
             isAdminMode = !isAdminMode;
             updateDisplay();
+            // Re-run auto-resize after toggling admin mode
+            autoResizeTextareas();
+        });
+
+        daySelectionButtonsContainer.addEventListener('click', (event) => {
+            const button = event.target.closest('.day-button');
+            if (!button) return;
+
+            const dayName = button.dataset.day;
+            if (dayName === 'Tự Động') {
+                setInitialView();
+            } else {
+                selectDay(dayName);
+            }
         });
 
         window.addEventListener('load', () => {
@@ -385,3 +445,4 @@
     </script>
 </body>
 </html>
+
