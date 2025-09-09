@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f5f7fa; /* Nền sáng, ấm hơn */
+            background-color: #f5f7fa;
         }
         .schedule-card {
             background-color: #ffffff;
@@ -20,20 +20,40 @@
         }
         .schedule-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 25px 50px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.1);
         }
         .day-header {
             border-bottom: 2px solid #e2e8f0;
         }
+        .schedule-section {
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8fafc;
+        }
+        .schedule-section.extra {
+            background-color: #e0f2fe; /* light blue for extra classes */
+        }
+        .schedule-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        .schedule-icon {
+            margin-right: 0.5rem;
+        }
         textarea {
-            resize: vertical; /* Cho phép thay đổi kích thước theo chiều dọc */
-            overflow-y: hidden; /* Ẩn thanh cuộn */
+            resize: vertical;
+            overflow-y: hidden;
             border: 1px solid #d1d5db;
             transition: all 0.2s ease-in-out;
             padding: 0.75rem;
             border-radius: 1rem;
             min-height: 4rem;
-            color: #2c3e50; /* Màu chữ đậm hơn */
+            color: #2c3e50;
             background-color: #fbfbfb;
             font-size: 1rem;
         }
@@ -45,11 +65,10 @@
             z-index: 1000;
             display: none;
         }
-        .readonly-textarea {
-            background-color: #ebf1f5;
-            cursor: default;
-            pointer-events: none;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        .editable-textarea {
+            background-color: #ffffff;
+            border-color: #93c5fd; /* blue-300 */
+            box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.5);
         }
         .day-button {
             transition: background-color 0.3s, color 0.3s, transform 0.2s;
@@ -74,7 +93,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="mt-4 text-gray-700 font-semibold">Đang tải...</p>
+            <p class="mt-4 text-gray-700 font-semibold">Đang lưu dữ liệu...</p>
         </div>
     </div>
 
@@ -140,9 +159,8 @@
         let isAdminMode = false;
         let selectedDay = null;
 
-        // IMPORTANT: Use the global variables provided by the environment
-        const SUPABASE_URL = typeof __supabase_url !== 'undefined' ? __supabase_url : 'https://pazpyjdzfyxcttuptfhr.supabase.co';
-        const SUPABASE_ANON_KEY = typeof __supabase_anon_key !== 'undefined' ? __supabase_anon_key : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhenB5amR6Znl4Y3R0dXB0ZmhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNDQ2MjYsImV4cCI6MjA3MjkyMDYyNn0.avHgrXzh4wkUvlpOtyYTJfOSaRYFQY3Hb2PJGgyLl0g';
+        const SUPABASE_URL = 'https://pazpyjdzfyxcttuptfhr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhenB5amR6Znl4Y3R0dXB0ZmhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNDQ2MjYsImV4cCI6MjA3MjkyMDYyNn0.avHgrXzh4wkUvlpOtyYTJfOSaRYFQY3Hb2PJGgyLl0g';
         
         let supabase = null;
 
@@ -155,7 +173,8 @@
             }, 3000);
         }
 
-        function showLoading(show) {
+        function showLoading(show, message = 'Đang lưu dữ liệu...') {
+            loadingOverlay.querySelector('p').textContent = message;
             loadingOverlay.style.display = show ? 'flex' : 'none';
         }
 
@@ -172,7 +191,26 @@
                 daySection1.className = 'day-section';
                 daySection1.innerHTML = `
                     <h3 class="text-xl font-semibold text-gray-600 day-header pb-2 mb-2">${day}</h3>
-                    <textarea id="schedule-A-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold readonly-textarea" readonly></textarea>
+                    <div class="schedule-section">
+                        <div class="schedule-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 schedule-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                            </svg>
+                            Lịch học chính
+                        </div>
+                        <textarea id="schedule-A-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold" readonly></textarea>
+                    </div>
+                    <div class="schedule-section extra">
+                        <div class="schedule-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 schedule-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                            </svg>
+                            Lịch học thêm
+                        </div>
+                        <div id="extra-schedule-A-container-${dayId}" class="space-y-4"></div>
+                        <button class="add-extra-btn mt-4 px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors hidden" data-day-id="${dayId}" data-student-id="A">+ Thêm Lịch</button>
+                    </div>
                 `;
                 student1ScheduleContainer.appendChild(daySection1);
 
@@ -182,57 +220,113 @@
                 daySection2.className = 'day-section';
                 daySection2.innerHTML = `
                     <h3 class="text-xl font-semibold text-gray-600 day-header pb-2 mb-2">${day}</h3>
-                    <textarea id="schedule-B-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold readonly-textarea" readonly></textarea>
+                    <div class="schedule-section">
+                        <div class="schedule-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 schedule-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                            </svg>
+                            Lịch học chính
+                        </div>
+                        <textarea id="schedule-B-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold" readonly></textarea>
+                    </div>
+                    <div class="schedule-section extra">
+                        <div class="schedule-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 schedule-icon" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                            </svg>
+                            Lịch học thêm
+                        </div>
+                        <div id="extra-schedule-B-container-${dayId}" class="space-y-4"></div>
+                        <button class="add-extra-btn mt-4 px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors hidden" data-day-id="${dayId}" data-student-id="B">+ Thêm Lịch</button>
+                    </div>
                 `;
                 student2ScheduleContainer.appendChild(daySection2);
             });
+        }
+
+        function createExtraScheduleEntryHtml({ start_time = '', end_time = '', teacher_name = '' }) {
+            // Check if isAdminMode is true to show delete button
+            const deleteButtonHtml = isAdminMode ? `
+                <button class="delete-extra-btn self-end sm:self-center bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.728-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            ` : '';
+            return `
+                <div class="extra-schedule-entry flex flex-col sm:flex-row gap-2 items-center bg-gray-50 p-4 rounded-xl shadow-inner">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-gray-700">Giờ đi</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="VD: 19:00" value="${start_time}" data-field="start_time" ${isAdminMode ? '' : 'readonly'}>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-gray-700">Giờ về</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="VD: 20:30" value="${end_time}" data-field="end_time" ${isAdminMode ? '' : 'readonly'}>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-gray-700">Cô/Thầy</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="VD: Cô Anh" value="${teacher_name}" data-field="teacher_name" ${isAdminMode ? '' : 'readonly'}>
+                    </div>
+                    ${deleteButtonHtml}
+                </div>
+            `;
         }
         
         function autoResizeTextareas() {
             document.querySelectorAll('textarea').forEach(textarea => {
                 textarea.style.height = 'auto';
-                textarea.style.height = (textarea.scrollHeight + 5) + 'px'; // Add 5px for padding
+                textarea.style.height = (textarea.scrollHeight + 5) + 'px';
             });
         }
         
         function getTargetDayName() {
-            // Get current time in Vietnam timezone (UTC+7)
             const nowInVietnam = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
             const currentHour = nowInVietnam.getHours();
-            const todayJSIndex = nowInVietnam.getDay(); // 0 = Sunday, 1 = Monday, ...
+            const todayJSIndex = nowInVietnam.getDay();
             
             let targetDayJSIndex;
-            // If current time >= 16:00, show tomorrow's schedule
-            if (currentHour >= 16) {
+            if (currentHour >= 18) {
                 targetDayJSIndex = (todayJSIndex === 6) ? 0 : todayJSIndex + 1;
-            } else { // Otherwise, show today's schedule
+            } else {
                 targetDayJSIndex = todayJSIndex;
             }
 
-            // Convert JS index (0-6) to our array index (0-6)
-            const targetScheduleIndex = targetDayJSIndex === 0 ? 6 : todayJSIndex - 1;
+            const targetScheduleIndex = targetDayJSIndex === 0 ? 6 : targetDayJSIndex - 1;
 
             return daysOfWeek[targetScheduleIndex];
         }
 
         function updateDisplay() {
             if (isAdminMode) {
-                // Show all days
                 document.querySelectorAll('.day-section').forEach(section => {
                     section.style.display = 'block';
                 });
                 
-                // Deactivate all day buttons
                 document.querySelectorAll('.day-button').forEach(button => {
                     button.classList.remove('active');
                 });
                 
-                // Update header and button text
+                // Make main schedule textareas editable
+                document.querySelectorAll('textarea[id^="schedule-A-"], textarea[id^="schedule-B-"]').forEach(textarea => {
+                    textarea.readOnly = false;
+                    textarea.classList.add('editable-textarea');
+                });
+                
+                // Show add and delete buttons for extra schedule
+                document.querySelectorAll('.add-extra-btn, .delete-extra-btn').forEach(btn => {
+                    btn.classList.remove('hidden');
+                });
+
+                // Make extra schedule inputs editable
+                document.querySelectorAll('.extra-schedule-entry input').forEach(input => {
+                    input.readOnly = false;
+                });
+                
                 student1Header.textContent = `${student1Name}`;
                 student2Header.textContent = `${student2Name}`;
                 toggleAdminBtn.textContent = 'Ẩn Toàn Bộ Lịch';
             } else {
-                // Hide all other days and only show the selected day
                 document.querySelectorAll('.day-section').forEach(section => {
                     section.style.display = 'none';
                 });
@@ -243,7 +337,22 @@
                 if (targetDaySectionA) targetDaySectionA.style.display = 'block';
                 if (targetDaySectionB) targetDaySectionB.style.display = 'block';
 
-                // Update header to show student names
+                // Make main schedule textareas read-only again
+                document.querySelectorAll('textarea[id^="schedule-A-"], textarea[id^="schedule-B-"]').forEach(textarea => {
+                    textarea.readOnly = true;
+                    textarea.classList.remove('editable-textarea');
+                });
+
+                // Hide add and delete buttons for extra schedule
+                document.querySelectorAll('.add-extra-btn, .delete-extra-btn').forEach(btn => {
+                    btn.classList.add('hidden');
+                });
+
+                // Make extra schedule inputs read-only
+                document.querySelectorAll('.extra-schedule-entry input').forEach(input => {
+                    input.readOnly = true;
+                });
+
                 student1Header.textContent = `${student1Name}`;
                 student2Header.textContent = `${student2Name}`;
                 toggleAdminBtn.textContent = 'Xem Toàn Bộ Lịch';
@@ -272,7 +381,7 @@
         }
 
         async function initializeSupabase() {
-            showLoading(true);
+            showLoading(true, 'Đang kết nối đến cơ sở dữ liệu...');
             try {
                 if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
                     throw new Error("Vui lòng cung cấp URL và Anon Key của Supabase để tiếp tục.");
@@ -280,9 +389,7 @@
                 
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
-                // Ping Supabase daily to keep the project active
                 await pingSupabase();
-
                 startRealtimeListeners();
                 await fetchInitialData();
                 
@@ -304,7 +411,6 @@
                     lastPingDate = new Date(data.last_ping);
                 }
 
-                // Ping if no record or if it's been more than 24 hours
                 if (!lastPingDate || (now.getTime() - lastPingDate.getTime() > 24 * 60 * 60 * 1000)) {
                     await supabase.from('settings').upsert({
                         id: 'last_ping_record',
@@ -317,7 +423,6 @@
         }
 
         function startRealtimeListeners() {
-            // Listen for student names
             supabase.channel('public:settings')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, payload => {
                     if (payload.new.id === 'student_names') {
@@ -326,7 +431,6 @@
                 })
                 .subscribe();
 
-            // Listen for schedules
             supabase.channel('public:schedules')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, payload => {
                     if (payload.new) {
@@ -337,7 +441,6 @@
         }
         
         async function fetchInitialData() {
-            // Fetch student names
             const { data: namesData, error: namesError } = await supabase.from('settings').select('*').eq('id', 'student_names').single();
             if (!namesError && namesData) {
                 updateNamesUI(namesData);
@@ -345,7 +448,6 @@
                 updateNamesUI({ student1_name: student1Name, student2_name: student2Name });
             }
 
-            // Fetch all schedules
             const { data: schedulesData, error: schedulesError } = await supabase.from('schedules').select('*');
             if (!schedulesError && schedulesData) {
                 const scheduleMap = schedulesData.reduce((acc, curr) => {
@@ -355,7 +457,6 @@
                 renderAllSchedules(scheduleMap);
             }
             
-            // Set initial view to auto-select the current/next day
             setInitialView();
             autoResizeTextareas();
         }
@@ -374,7 +475,9 @@
 
         function renderDay(dayId, schedule) {
             const studentATextarea = document.getElementById(`schedule-A-${dayId}`);
+            const extraStudentAContainer = document.getElementById(`extra-schedule-A-container-${dayId}`);
             const studentBTextarea = document.getElementById(`schedule-B-${dayId}`);
+            const extraStudentBContainer = document.getElementById(`extra-schedule-B-container-${dayId}`);
             
             if (studentATextarea) {
                 studentATextarea.value = schedule.student_a || '';
@@ -382,12 +485,85 @@
             if (studentBTextarea) {
                 studentBTextarea.value = schedule.student_b || '';
             }
-            // Add an input event listener to the textareas to auto-resize
-            studentATextarea.addEventListener('input', autoResizeTextareas);
-            studentBTextarea.addEventListener('input', autoResizeTextareas);
-
-            // Re-run the auto-resize logic after setting the value
+            
+            // Handle structured extra schedules (JSON array)
+            try {
+                const extraA = JSON.parse(schedule.extra_student_a || '[]');
+                renderExtraScheduleEntries(extraStudentAContainer, dayId, 'A', extraA);
+            } catch (e) {
+                console.error("Failed to parse extra schedule for Student A:", e);
+                renderExtraScheduleEntries(extraStudentAContainer, dayId, 'A', []);
+            }
+            
+            try {
+                const extraB = JSON.parse(schedule.extra_student_b || '[]');
+                renderExtraScheduleEntries(extraStudentBContainer, dayId, 'B', extraB);
+            } catch (e) {
+                console.error("Failed to parse extra schedule for Student B:", e);
+                renderExtraScheduleEntries(extraStudentBContainer, dayId, 'B', []);
+            }
+            
             autoResizeTextareas();
+        }
+        
+        function renderExtraScheduleEntries(container, dayId, studentId, entries) {
+            if (!container) return; // Add null check for container
+            container.innerHTML = '';
+            entries.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.innerHTML = createExtraScheduleEntryHtml(entry);
+                container.appendChild(entryDiv.firstElementChild);
+            });
+        }
+        
+        function collectExtraScheduleData(dayId, studentId) {
+            const container = document.getElementById(`extra-schedule-${studentId}-container-${dayId}`);
+            if (!container) {
+                console.error("Container not found for dayId:", dayId, "and studentId:", studentId);
+                return []; 
+            }
+            const entries = [];
+            container.querySelectorAll('.extra-schedule-entry').forEach(entryDiv => {
+                const start_time = entryDiv.querySelector('[data-field="start_time"]').value;
+                const end_time = entryDiv.querySelector('[data-field="end_time"]').value;
+                const teacher_name = entryDiv.querySelector('[data-field="teacher_name"]').value;
+                entries.push({ start_time, end_time, teacher_name });
+            });
+            return entries;
+        }
+
+        async function saveSchedule(dayId, field, value) {
+            if (!supabase) {
+                showMessage("Lỗi: Không thể kết nối với cơ sở dữ liệu.", 'error');
+                return;
+            }
+            showLoading(true);
+            try {
+                const updateObject = {
+                    day_id: dayId,
+                    [field]: value
+                };
+                const { data, error } = await supabase
+                    .from('schedules')
+                    .upsert(updateObject, { onConflict: 'day_id' });
+
+                if (error) {
+                    throw error;
+                }
+                
+                showMessage('Lưu thành công!');
+            } catch (error) {
+                console.error("Lỗi khi lưu dữ liệu:", error);
+                showMessage('Lỗi khi lưu dữ liệu: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function saveExtraSchedule(dayId, studentId) {
+            const extraScheduleData = collectExtraScheduleData(dayId, studentId);
+            const field = studentId === 'A' ? 'extra_student_a' : 'extra_student_b';
+            await saveSchedule(dayId, field, JSON.stringify(extraScheduleData));
         }
 
         function selectDay(dayName) {
@@ -395,7 +571,6 @@
             selectedDay = dayName;
             updateDisplay();
 
-            // Update active button state
             document.querySelectorAll('.day-button').forEach(button => {
                 button.classList.remove('active');
             });
@@ -403,14 +578,12 @@
             if (selectedButton) {
                 selectedButton.classList.add('active');
             }
-            // Re-run auto-resize after day selection
             autoResizeTextareas();
         }
         
         function setInitialView() {
             const autoDayName = getTargetDayName();
             selectDay(autoDayName);
-            // Also highlight the "Tự Động" button
             const autoButton = document.querySelector(`[data-day="Tự Động"]`);
             if (autoButton) {
                 autoButton.classList.add('active');
@@ -419,8 +592,10 @@
 
         toggleAdminBtn.addEventListener('click', () => {
             isAdminMode = !isAdminMode;
+            if (!isAdminMode) {
+                setInitialView();
+            }
             updateDisplay();
-            // Re-run auto-resize after toggling admin mode
             autoResizeTextareas();
         });
 
@@ -441,8 +616,68 @@
             initializeSupabase();
             updateHeaderDate();
             setInterval(updateHeaderDate, 1000);
+
+            // Add event listeners for new buttons and inputs
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.add-extra-btn')) {
+                    const btn = e.target.closest('.add-extra-btn');
+                    if (!isAdminMode) return; // Prevent action if not in admin mode
+                    const dayId = btn.dataset.dayId;
+                    const studentId = btn.dataset.studentId;
+                    const container = document.getElementById(`extra-schedule-${studentId}-container-${dayId}`);
+                    if (!container) return; // Add null check
+                    const newEntryDiv = document.createElement('div');
+                    newEntryDiv.innerHTML = createExtraScheduleEntryHtml({});
+                    container.appendChild(newEntryDiv.firstElementChild);
+                    saveExtraSchedule(dayId, studentId);
+                } else if (e.target.closest('.delete-extra-btn')) {
+                    const btn = e.target.closest('.delete-extra-btn');
+                    if (!isAdminMode) return; // Prevent action if not in admin mode
+                    const entryDiv = btn.closest('.extra-schedule-entry');
+                    const parentContainer = btn.closest('[id^="extra-schedule-"]');
+                    if (parentContainer) {
+                        const idParts = parentContainer.id.split('-');
+                        const dayId = idParts[idParts.length - 1];
+                        const studentId = idParts[2];
+                        entryDiv.remove();
+                        saveExtraSchedule(dayId, studentId);
+                    }
+                }
+            });
+
+            document.addEventListener('blur', (e) => {
+                const input = e.target.closest('[data-field]');
+                const textarea = e.target;
+
+                if (input) {
+                    const parentContainer = input.closest('[id^="extra-schedule-"]');
+                    if (parentContainer) {
+                        const idParts = parentContainer.id.split('-');
+                        const dayId = idParts[idParts.length - 1];
+                        const studentId = idParts[2];
+                        saveExtraSchedule(dayId, studentId);
+                    }
+                } else if (textarea.id.startsWith('schedule-') && !textarea.readOnly) {
+                    const idParts = textarea.id.split('-');
+                    const dayId = idParts[2];
+                    const studentId = idParts[1];
+                    const field = `student_${studentId.toLowerCase()}`;
+                    saveSchedule(dayId, field, textarea.value);
+                }
+            }, true);
+
+            document.addEventListener('focus', (e) => {
+                if (e.target.tagName === 'INPUT' || (e.target.tagName === 'TEXTAREA' && !e.target.readOnly)) {
+                    e.target.classList.add('editable-textarea');
+                }
+            }, true);
+
+            document.addEventListener('blur', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    e.target.classList.remove('editable-textarea');
+                }
+            }, true);
         });
     </script>
 </body>
 </html>
-
