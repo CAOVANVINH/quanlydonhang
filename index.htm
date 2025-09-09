@@ -7,35 +7,35 @@
     <!-- Tailwind CSS CDN for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f4f7f9;
+            background-color: #f5f7fa; /* Nền sáng, ấm hơn */
         }
         .schedule-card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-            border-radius: 1rem;
-            transition: transform 0.3s ease-in-out;
+            background-color: #ffffff;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.05);
+            border-radius: 1.5rem;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
         .schedule-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.1);
         }
         .day-header {
             border-bottom: 2px solid #e2e8f0;
         }
         textarea {
-            resize: none;
-            overflow: hidden;
+            resize: vertical; /* Cho phép thay đổi kích thước theo chiều dọc */
+            overflow-y: hidden; /* Ẩn thanh cuộn */
             border: 1px solid #d1d5db;
             transition: all 0.2s ease-in-out;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            min-height: 4rem; /* Initial height for better readability */
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+            padding: 0.75rem;
+            border-radius: 1rem;
+            min-height: 4rem;
+            color: #2c3e50; /* Màu chữ đậm hơn */
+            background-color: #fbfbfb;
+            font-size: 1rem;
         }
         .message-box {
             position: fixed;
@@ -46,9 +46,20 @@
             display: none;
         }
         .readonly-textarea {
-            background-color: #e2e8f0;
+            background-color: #ebf1f5;
             cursor: default;
             pointer-events: none;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .day-button {
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+            transform: scale(1);
+        }
+        .day-button.active {
+            background-color: #2c3e50;
+            color: white;
+            box-shadow: 0 4px 6px rgba(44, 62, 80, 0.25);
+            transform: scale(1.05);
         }
     </style>
     <!-- Supabase SDK -->
@@ -74,7 +85,10 @@
         <div class="bg-white p-6 md:p-8 rounded-2xl schedule-card mb-6 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Thời Khoá Biểu</h1>
             <p id="date-display" class="text-gray-500 mb-4"></p>
-            <button id="toggleAdminBtn" class="mt-4 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-300">
+            
+            <!-- Day selection buttons removed -->
+
+            <button id="toggleAdminBtn" class="mt-4 px-6 py-2 bg-blue-500 text-white font-semibold rounded-full hover:bg-blue-600 transition-colors duration-300 transform hover:scale-105">
                 Xem Toàn Bộ Lịch
             </button>
         </div>
@@ -111,8 +125,10 @@
         const student2ScheduleContainer = document.getElementById('student-2-schedule');
         const dateDisplayElement = document.getElementById('date-display');
         const toggleAdminBtn = document.getElementById('toggleAdminBtn');
+        const daySelectionButtonsContainer = null; // Update to remove buttons
 
         let isAdminMode = false;
+        let selectedDay = null;
 
         // IMPORTANT: Use the global variables provided by the environment
         const SUPABASE_URL = typeof __supabase_url !== 'undefined' ? __supabase_url : 'https://pazpyjdzfyxcttuptfhr.supabase.co';
@@ -146,7 +162,7 @@
                 daySection1.className = 'day-section';
                 daySection1.innerHTML = `
                     <h3 class="text-xl font-semibold text-gray-600 day-header pb-2 mb-2">${day}</h3>
-                    <textarea id="schedule-A-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold"></textarea>
+                    <textarea id="schedule-A-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold readonly-textarea" readonly></textarea>
                 `;
                 student1ScheduleContainer.appendChild(daySection1);
 
@@ -156,7 +172,7 @@
                 daySection2.className = 'day-section';
                 daySection2.innerHTML = `
                     <h3 class="text-xl font-semibold text-gray-600 day-header pb-2 mb-2">${day}</h3>
-                    <textarea id="schedule-B-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold"></textarea>
+                    <textarea id="schedule-B-${dayId}" placeholder="Lịch học ${day}..." class="w-full text-gray-800 font-bold readonly-textarea" readonly></textarea>
                 `;
                 student2ScheduleContainer.appendChild(daySection2);
             });
@@ -164,74 +180,58 @@
         
         function autoResizeTextareas() {
             document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.addEventListener('input', () => {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = textarea.scrollHeight + 'px';
-                });
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight + 5) + 'px'; // Add 5px for padding
             });
         }
         
         function getTargetDayName() {
-            // Lấy thời gian hiện tại theo múi giờ Việt Nam (UTC+7)
+            // Get current time in Vietnam timezone (UTC+7)
             const nowInVietnam = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
             const currentHour = nowInVietnam.getHours();
             const todayJSIndex = nowInVietnam.getDay(); // 0 = Sunday, 1 = Monday, ...
             
             let targetDayJSIndex;
-            // Nếu giờ hiện tại >= 16:00, hiển thị ngày mai
+            // If current time >= 16:00, show tomorrow's schedule
             if (currentHour >= 16) {
                 targetDayJSIndex = (todayJSIndex === 6) ? 0 : todayJSIndex + 1;
-            } else { // Ngược lại, hiển thị ngày hiện tại
+            } else { // Otherwise, show today's schedule
                 targetDayJSIndex = todayJSIndex;
             }
 
-            // Chuyển đổi chỉ số JavaScript (0-6) sang chỉ số mảng của chúng ta (0-6)
-            const targetScheduleIndex = targetDayJSIndex === 0 ? 6 : targetDayJSIndex - 1;
+            // Convert JS index (0-6) to our array index (0-6)
+            const targetScheduleIndex = targetDayJSIndex === 0 ? 6 : todayJSIndex - 1;
 
             return daysOfWeek[targetScheduleIndex];
         }
 
         function updateDisplay() {
-            const allTextareas = document.querySelectorAll('textarea');
             if (isAdminMode) {
-                // Hiển thị tất cả các ngày
+                // Show all days
                 document.querySelectorAll('.day-section').forEach(section => {
                     section.style.display = 'block';
                 });
-                // Cập nhật tiêu đề
+                
+                // Update header and button text
                 student1Header.textContent = `${student1Name}`;
                 student2Header.textContent = `${student2Name}`;
                 toggleAdminBtn.textContent = 'Ẩn Toàn Bộ Lịch';
-                
-                // Đặt các ô nhập liệu thành chỉ đọc
-                allTextareas.forEach(textarea => {
-                    textarea.readOnly = true;
-                    textarea.classList.add('readonly-textarea');
-                });
             } else {
-                const targetDayName = getTargetDayName();
-                // Ẩn tất cả các ngày khác
+                // Hide all other days and only show the selected day
                 document.querySelectorAll('.day-section').forEach(section => {
                     section.style.display = 'none';
                 });
-                // Hiển thị ngày mục tiêu
-                const targetDayId = targetDayName.replace(/\s/g, '');
+                const targetDayId = selectedDay.replace(/\s/g, '');
                 const targetDaySectionA = document.getElementById(`day-section-A-${targetDayId}`);
                 const targetDaySectionB = document.getElementById(`day-section-B-${targetDayId}`);
                 
                 if (targetDaySectionA) targetDaySectionA.style.display = 'block';
                 if (targetDaySectionB) targetDaySectionB.style.display = 'block';
 
-                // Cập nhật tiêu đề để hiển thị tên học sinh
+                // Update header to show student names
                 student1Header.textContent = `${student1Name}`;
                 student2Header.textContent = `${student2Name}`;
                 toggleAdminBtn.textContent = 'Xem Toàn Bộ Lịch';
-
-                // Đặt các ô nhập liệu về trạng thái chỉnh sửa được
-                allTextareas.forEach(textarea => {
-                    textarea.readOnly = false;
-                    textarea.classList.remove('readonly-textarea');
-                });
             }
         }
 
@@ -272,7 +272,7 @@
                 await fetchInitialData();
                 
             } catch (error) {
-                console.error("Lỗi khi kết nối với Supabase:", error);
+                console.error("Error connecting to Supabase:", error);
                 showMessage(error.message, 'error');
             } finally {
                 showLoading(false);
@@ -297,12 +297,12 @@
                     }, { onConflict: 'id' });
                 }
             } catch (error) {
-                console.error("Lỗi khi ping Supabase:", error);
+                console.error("Error pinging Supabase:", error);
             }
         }
 
         function startRealtimeListeners() {
-            // Lắng nghe tên học sinh
+            // Listen for student names
             supabase.channel('public:settings')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, payload => {
                     if (payload.new.id === 'student_names') {
@@ -311,52 +311,17 @@
                 })
                 .subscribe();
 
-            // Lắng nghe thời khoá biểu
+            // Listen for schedules
             supabase.channel('public:schedules')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, payload => {
                     if (payload.new) {
                         renderDay(payload.new.day_id, payload.new);
+                        autoResizeTextareas(); // Auto-resize on content change
                     }
                 })
                 .subscribe();
-
-            // Lắng nghe sự kiện input và tự động lưu
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.addEventListener('input', debounce(saveSchedule, 1000));
-            });
         }
         
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), delay);
-            };
-        }
-
-        async function saveSchedule(event) {
-            // Kiểm tra xem ô nhập liệu có ở chế độ chỉ đọc không
-            if (!supabase || event.target.readOnly) return;
-            try {
-                // Lấy dayId từ id của textarea (ví dụ: "schedule-A-ThứHai" -> "ThứHai")
-                const dayId = event.target.id.replace(/schedule-[A|B]-/, '');
-                const isStudentA = event.target.id.includes('schedule-A');
-                
-                // Lưu dữ liệu vào Supabase
-                const { error } = await supabase.from('schedules').upsert({
-                    day_id: dayId,
-                    [isStudentA ? 'student_a' : 'student_b']: event.target.value
-                }, { onConflict: 'day_id' });
-
-                if (error) throw error;
-                showMessage('Đã lưu thời khoá biểu thành công.');
-            } catch (error) {
-                console.error("Lỗi khi lưu thời khoá biểu:", error);
-                showMessage('Lỗi khi lưu thời khoá biểu.', 'error');
-            }
-        }
-
         async function fetchInitialData() {
             // Fetch student names
             const { data: namesData, error: namesError } = await supabase.from('settings').select('*').eq('id', 'student_names').single();
@@ -375,12 +340,11 @@
                 }, {});
                 renderAllSchedules(scheduleMap);
             }
-            // Auto-resize textareas after content is loaded
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-            });
+            
+            // Set initial day view to the current/next day
+            selectedDay = getTargetDayName();
             updateDisplay();
+            autoResizeTextareas(); // Auto-resize after content is loaded
         }
 
         function updateNamesUI(names) {
@@ -414,7 +378,6 @@
 
         window.addEventListener('load', () => {
             generateScheduleContainers();
-            autoResizeTextareas();
             initializeSupabase();
             updateHeaderDate();
             setInterval(updateHeaderDate, 1000);
