@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thời Khóa Biểu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thêm thư viện html2canvas để xuất hình ảnh -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container-main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header-title {
+            color: #d1589d;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+        .header-subtitle {
+            font-size: 1.25rem;
+            font-weight: 700; /* Đã làm cho chữ đậm hơn */
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
+        }
+        .header-subtitle:hover {
+            text-decoration: underline;
+        }
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: 1fr repeat(5, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .timetable-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        .cell {
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .cell-header {
+            background-color: #fecaca;
+            color: #b91c1c;
+            border: 2px solid #b91c1c;
+        }
+        .cell-session {
+            font-weight: 700;
+        }
+        .cell-morning {
+            background-color: #fcd34d;
+            color: #b45309;
+            border: 2px solid #b45309;
+        }
+        .cell-afternoon {
+            background-color: #bfdbfe;
+            color: #1e40af;
+            border: 2px solid #1e40af;
+        }
+        .cell-subject {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 2px solid #34d399;
+            cursor: pointer;
+        }
+        .cell-subject:hover {
+            background-color: #a7f3d0;
+            transform: translateY(-2px);
+        }
+        .cell-subject[contenteditable="true"], .editable-text[contenteditable="true"] {
+            outline: 2px solid #3b82f6;
+            background-color: #e0e7ff;
+        }
+        /* Grid spans for layout */
+        .header-buoi {
+            grid-column: 1;
+            grid-row: 1;
+        }
+        .header-thu {
+            grid-column: 2 / span 5;
+        }
+        .session-sang {
+            grid-row: 2 / span 4;
+            grid-column: 1;
+        }
+        .session-chieu {
+            grid-row: 6 / span 3;
+            grid-column: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div id="timetable-container" class="container-main bg-white rounded-xl shadow-lg">
+        <h1 class="header-title">
+            THỜI KHÓA BIỂU
+        </h1>
+        <p class="header-subtitle editable-text">CAO TRẦN THẢO HUYỀN  1/1</p>
+
+        <div class="timetable-grid">
+            <!-- Header Row -->
+            <div class="cell cell-header header-buoi">Buổi</div>
+            <div class="cell cell-header">Thứ Hai</div>
+            <div class="cell cell-header">Thứ Ba</div>
+            <div class="cell cell-header">Thứ Tư</div>
+            <div class="cell cell-header">Thứ Năm</div>
+            <div class="cell cell-header">Thứ Sáu</div>
+
+            <!-- Morning Session -->
+            <div class="cell cell-session cell-morning session-sang">
+                <span role="img" aria-label="sun">☀️</span> Sáng
+            </div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+
+            <!-- Afternoon Session -->
+            <div class="cell cell-session cell-afternoon session-chieu">
+                <span role="img" aria-label="moon">🌙</span> Chiều
+            </div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+            <div class="cell cell-subject"></div>
+        </div>
+    </div>
+    
+    <!-- Thêm nút xuất PNG -->
+    <div class="mt-4 text-center">
+        <button id="export-png-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition transform hover:scale-105 duration-200 focus:outline-none">
+            <span role="img" aria-label="download">⬇️</span> Xuất PNG
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = document.querySelectorAll('.cell-subject, .editable-text');
+            const exportBtn = document.getElementById('export-png-btn');
+            const timetableContainer = document.getElementById('timetable-container');
+
+            cells.forEach(cell => {
+                cell.addEventListener('dblclick', (e) => {
+                    e.target.contentEditable = "true";
+                    e.target.focus();
+                });
+
+                cell.addEventListener('blur', (e) => {
+                    e.target.contentEditable = "false";
+                });
+
+                cell.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.contentEditable = "false";
+                        e.target.blur();
+                    }
+                });
+            });
+
+            // Logic để xuất thời khóa biểu ra file PNG
+            exportBtn.addEventListener('click', () => {
+                // Sử dụng html2canvas để chụp ảnh phần tử chứa thời khóa biểu
+                html2canvas(timetableContainer, {
+                    scale: 4 // Tăng độ phân giải lên 4x để có hình ảnh chất lượng cao
+                }).then(canvas => {
+                    // Tạo một đường link tạm thời
+                    const link = document.createElement('a');
+                    // Gán dữ liệu hình ảnh cho href
+                    link.href = canvas.toDataURL('image/png');
+                    // Đặt tên tệp tải về
+                    link.download = 'thoi-khoa-bieu.png';
+                    // Tự động nhấp vào link để bắt đầu tải về
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
